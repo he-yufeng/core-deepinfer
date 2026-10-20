@@ -2,6 +2,8 @@
 
 The checked-in [engine demo](results/engine-demo.json), [detail experiments](results/cpu-experiments.json) and [validation receipt](results/validation.json) record this CPU implementation, not DeepInfer kernels or DeepSeek weights. The receipt identifies tested modules, tests, guides and packaging inputs by SHA-256 rather than a mutable branch name.
 
+The published 0.1.0 archives correspond to [tag v0.1.0](https://github.com/he-yufeng/core-deepinfer/tree/v0.1.0), commit `c541f77799bda3796467cf14e4d14270d11fc8e7`. The checked-in fingerprints describe that release snapshot. Later installation-documentation changes on main do not alter the uploaded archives.
+
 ## Reproduce
 
 Use Python 3.10 or newer in a fresh environment, from the complete source distribution:
@@ -27,7 +29,9 @@ The build explicitly selects standard Core Metadata 2.4 for both archives. Hatch
 
 The recorded local build uses existing dependencies with `python -m build --no-isolation`. This project's wheel is installed with `--no-deps`; the full copied test suite is then run outside the checkout against the installed package. Source and installed-wheel results are recorded separately. A new isolated editable dependency installation is not part of the successful local receipt. Package metadata is checked using an already-installed Twine 6.2.0; no new Twine installation is required.
 
-The [CPU workflow](../.github/workflows/tests.yml) is configured for Python 3.10, 3.12 and 3.14 on Linux. A workflow definition is not a completed CI run; no remote run is claimed here. PyPI upload and remote file hashes, when available, are recorded in a separate publication receipt rather than inferred from a local build.
+The release commit's [CPU CI run](https://github.com/he-yufeng/core-deepinfer/actions/runs/39503432984) completed successfully on Linux with Python 3.10, 3.12 and 3.14, with 256 tests passing in each job. Its lint, demo, example, build and outside-checkout wheel steps also succeeded. This is actual CI output, not a conclusion inferred from the workflow definition.
+
+[PyPI 0.1.0](https://pypi.org/project/core-deepinfer/0.1.0/) was uploaded through the official production endpoint. Both downloaded archives matched the validated file hashes. A separate new macOS environment then installed 0.1.0 from production PyPI, including NumPy 2.5.4, without reusing this checkout or its environment. The installed module/guide hashes, dependency check, demo, CLI, offline chapter and library calls passed. Those publication and clean-install checks are separate from the local build receipt; none establishes GPU/NPU or trained-model behavior.
 
 ## What is checked
 

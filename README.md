@@ -2,7 +2,7 @@
 
 **Follow a request from prefill to the last committed token.**
 
-[中文](README_CN.md) · [Read the source](core_deepinfer/guides/00-index_EN.md) · [Upstream source map](docs/SOURCE_MAP.md) · [Validation](docs/VALIDATION.md)
+[中文](README_CN.md) · [PyPI](https://pypi.org/project/core-deepinfer/) · [Read the source](core_deepinfer/guides/00-index_EN.md) · [Upstream source map](docs/SOURCE_MAP.md) · [Validation](docs/VALIDATION.md)
 
 A small NumPy inference engine for studying DeepInfer's state transitions. Submit requests, restore a cached prefix, propose draft tokens, allocate verification work, write real KV, roll back a rejected branch, and keep generating. The same loop is available as a Python library and a CLI.
 
@@ -15,16 +15,12 @@ The model performs real float64 attention, projections and feed-forward operatio
 Python 3.10+ and NumPy. No model download, GPU, API key or service.
 
 ```bash
-git clone https://github.com/he-yufeng/core-deepinfer.git
-cd core-deepinfer
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install core-deepinfer
 core-deepinfer
 core-deepinfer guide --list
 ```
 
-The source installation includes tests, examples and the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. Built wheels contain the same guide text, not a separately maintained copy.
+The published package includes the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. The full tests and examples are available in the source checkout below.
 
 The default run exercises two requests with a shared prefix, a cancelled request, speculative writes and rollback, a hot state hit, an expired short state with a surviving encoder prefix, and finally a cold miss. It checks emitted tokens **and the complete committed state** against ordinary greedy decoding.
 
@@ -130,9 +126,14 @@ The default recovery is exact. Explicit `--recovery compact --keep 8` requests b
 
 ## Working on the source
 
-After the source installation above, run the checks from the checkout:
+To change the model or run the full test suite, install a source checkout:
 
 ```bash
+git clone https://github.com/he-yufeng/core-deepinfer.git
+cd core-deepinfer
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
 python -m pytest -q
 ruff check core_deepinfer tests examples
 ruff format --check core_deepinfer tests examples

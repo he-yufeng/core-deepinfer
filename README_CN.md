@@ -2,7 +2,7 @@
 
 **沿着一个请求，读到最后一个真正提交的 Token。**
 
-[English](README.md) · [源码导读系列](core_deepinfer/guides/00-index.md) · [原版源码映射](docs/SOURCE_MAP.md) · [验证记录](docs/VALIDATION.md)
+[English](README.md) · [PyPI](https://pypi.org/project/core-deepinfer/) · [源码导读系列](core_deepinfer/guides/00-index.md) · [原版源码映射](docs/SOURCE_MAP.md) · [验证记录](docs/VALIDATION.md)
 
 推理框架最难读懂的，往往不是 attention 的公式。一个请求被抢占、命中旧状态、提出草稿又被拒绝以后，哪些数据还有效，下一轮从哪里接着算？
 
@@ -21,16 +21,12 @@ Core DeepInfer 把这条执行链写成了一个小型 NumPy 引擎：请求入�
 Python 3.10+，运行依赖只有 NumPy。不下载权重，不要 API key，也不启动服务。
 
 ```bash
-git clone https://github.com/he-yufeng/core-deepinfer.git
-cd core-deepinfer
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
+python -m pip install core-deepinfer
 core-deepinfer
 core-deepinfer guide --list --lang zh
 ```
 
-源码安装包含完整测试、示例和双语导读。`core-deepinfer guide 03 --lang zh` 会直接打印第三篇，不开浏览器，也不临时联网。构建出来的 wheel 也带同一份导读，不另维护一套只能看的演示。
+发布包自带完整双语导读。`core-deepinfer guide 03 --lang zh` 会直接打印第三篇，不开浏览器，也不临时联网。完整测试和示例在下面的源码 checkout 中，导读与安装包使用的是同一份文字。
 
 默认 demo 不是把几个预写好的数字打印出来。它实际提交两个有共同前缀的请求，取消第三个请求，运行草稿与目标模型，再让同一前缀依次经历热命中、短状态过期后的恢复、完整过期后的冷启动。
 
@@ -132,9 +128,14 @@ python -m core_deepinfer speculative --json
 
 ## 修改源码
 
-完成前面的源码安装后，在仓库里运行检查：
+要修改模型、运行完整测试或重新构建，可以单独安装源码：
 
 ```bash
+git clone https://github.com/he-yufeng/core-deepinfer.git
+cd core-deepinfer
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
 python -m pytest -q
 ruff check core_deepinfer tests examples
 ruff format --check core_deepinfer tests examples
