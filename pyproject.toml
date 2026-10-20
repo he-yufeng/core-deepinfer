@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "core-deepinfer"
+version = "0.1.0"
+description = "Executable CPU notes on bounded replay, speculative verification and inference state"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "Yufeng He"}]
+dependencies = ["numpy>=1.24"]
+keywords = ["inference", "deepinfer", "kv-cache", "speculative-decoding", "education"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.9", "build>=1.2"]
+
+[project.scripts]
+core-deepinfer = "core_deepinfer.cli:main"
+
+[project.urls]
+Repository = "https://github.com/he-yufeng/core-deepinfer"
+Issues = "https://github.com/he-yufeng/core-deepinfer/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core_deepinfer"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/core_deepinfer", "/tests", "/docs", "/README.md", "/README_CN.md", "/LICENSE", "/pyproject.toml", "/.github/workflows/tests.yml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

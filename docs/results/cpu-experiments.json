@@ -1,0 +1,119 @@
+{
+  "replay": {
+    "model_weights": "random, untrained",
+    "length": 32,
+    "keep": 8,
+    "mask_consumer_rows": 96,
+    "compact_consumer_rows": 24,
+    "full_source_rows": 32,
+    "mask_compact_max_error": 2.55351295663786e-15,
+    "bounded_exact_max_error": 2.054141278360671,
+    "scope": "Float64 toy-model arithmetic and row counts, not DeepSeek quality or a speed benchmark"
+  },
+  "budget": {
+    "curve_source": "synthetic teaching input, not a hardware measurement",
+    "curve": [
+      [
+        2,
+        1.0
+      ],
+      [
+        4,
+        1.3
+      ],
+      [
+        8,
+        2.8
+      ],
+      [
+        12,
+        6.0
+      ]
+    ],
+    "cpu_budget": {
+      "total_tokens": 4,
+      "lengths": [
+        3,
+        1
+      ],
+      "graph_size": 4,
+      "expected_tokens": 3.805,
+      "estimated_ms": 1.7000000000000002
+    },
+    "newer_confidence_lengths": [
+      1,
+      3
+    ],
+    "padding_positions": 0,
+    "scope": "Reference allocation only; not GPU execution or an asynchronous engine"
+  },
+  "cache": {
+    "state_before_expiry": true,
+    "state_expired_at_ttl": true,
+    "long_prefix_survives": true,
+    "ring_after_overwrite_and_rollback": [
+      [
+        0.0
+      ],
+      [
+        1.0
+      ],
+      [
+        2.0
+      ]
+    ],
+    "scope": "Fake clock and in-process copied arrays, not a distributed storage benchmark"
+  },
+  "speculative": {
+    "model_weights": "random, untrained",
+    "greedy_tokens": [
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17
+    ],
+    "speculative_tokens": [
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17,
+      17
+    ],
+    "same_tokens": true,
+    "committed_state_max_error": 1.1102230246251565e-15,
+    "accepted_drafts": 0,
+    "proposed_drafts": 70,
+    "scope": "Recomputing greedy reference, not DSpark or a throughput optimization"
+  },
+  "chunk_layout": {
+    "positions": [
+      511
+    ],
+    "ring_slots": [
+      -1
+    ]
+  }
+}

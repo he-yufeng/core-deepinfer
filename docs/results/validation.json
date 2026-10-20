@@ -1,0 +1,94 @@
+{
+  "recorded_at_utc": "2026-10-20T16:50:01.913366+00:00",
+  "scope": "Local CPU reference implementation; no upstream native engine, GPU/NPU or model weights",
+  "environment": {
+    "python": "3.14.5",
+    "os": "Darwin",
+    "architecture": "arm64",
+    "packages": {
+      "numpy": "2.5.4",
+      "pytest": "9.1.1",
+      "ruff": "0.17.1",
+      "build": "1.6.1",
+      "hatchling": "1.32.4"
+    }
+  },
+  "source_sha256": {
+    ".github/workflows/tests.yml": "f67967640d00e1655046c2d1184a480fc9cb0d090cecb0f14bea5058e175f956",
+    "core_deepinfer/__init__.py": "ffd73b40ce48373507c3a981cebcbf46a520a57d88b8cb090991ad72fe7c86c5",
+    "core_deepinfer/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
+    "core_deepinfer/budget.py": "b04695d06396c25e200803be40f328f5030ac0a2a86b1a8edaa62e9b7bcef267",
+    "core_deepinfer/cache.py": "60abe27e8d718127e0c18a7a096cc382b9fe072cf63481453e702648d929d24e",
+    "core_deepinfer/cli.py": "3fc119a89ec59128d9706bbf0c286ceaaed30df56e1c8c23a2daf669b5c90225",
+    "core_deepinfer/model.py": "560981114621212d28013c96e7f01207b9c894a3bf3a6ffb6281bfa2ff471962",
+    "core_deepinfer/replay.py": "b748e2b988ca6176d45a5bce1f325cc0b2b54e9f04c898bce4da50a0e4e2a5aa",
+    "core_deepinfer/speculative.py": "1d731c516835b88a5102febf5ccf8165e57917c739a69b29a8a5d1e28c222be7",
+    "pyproject.toml": "64be31d3c1de07d55a18da6650bf14d632c0eddcfe1172224db6f2ccbf0599c6",
+    "tests/test_budget.py": "5dd32af1b5460e66ac4b998688120d10de45d459c3ca7b7bc79b2553b102083b",
+    "tests/test_cache.py": "68a32b4a733fa17c81f3931a6a71bc1310843b1265308c11bae9d065f5ed1f06",
+    "tests/test_cli.py": "f0c8ed935c59970b32516a79313351e5fd9512405d86e18cef1b3596a3e75e61",
+    "tests/test_replay.py": "7f9029ccb49a59c7d662492f0da0bad4f14506a27b6cb062bfc3a18920727e36",
+    "tests/test_speculative.py": "66b43d714c71598e5635fdd7efff05e6c64ee365267b9fb7c8fd7896564a82c1"
+  },
+  "tests": {
+    "passed": 84,
+    "failed": 0,
+    "command": "python -m pytest tests -q"
+  },
+  "numerical_absolute_tolerance": 1e-10,
+  "commands": [
+    {
+      "check": "lint",
+      "exit_code": 0
+    },
+    {
+      "check": "format",
+      "exit_code": 0
+    },
+    {
+      "check": "dependencies",
+      "exit_code": 0
+    },
+    {
+      "check": "tests",
+      "exit_code": 0
+    },
+    {
+      "check": "experiments",
+      "exit_code": 0
+    },
+    {
+      "check": "build",
+      "exit_code": 0
+    },
+    {
+      "check": "wheel-install",
+      "exit_code": 0
+    },
+    {
+      "check": "wheel-isolated-import",
+      "exit_code": 0
+    },
+    {
+      "check": "wheel-isolated-module",
+      "exit_code": 0
+    },
+    {
+      "check": "wheel-console",
+      "exit_code": 0
+    }
+  ],
+  "packaging": {
+    "sdist_to_wheel": true,
+    "archive_content_check": "passed",
+    "installed_wheel_outside_checkout": true,
+    "isolated_import": {
+      "version": "0.1.0",
+      "module_relative_to_environment": "lib/python3.14/site-packages/core_deepinfer/__init__.py"
+    },
+    "isolated_module_output_matches_checkout": true,
+    "console_replay_length": 24,
+    "console_replay_keep": 4,
+    "not_published_to_pypi": true
+  }
+}
