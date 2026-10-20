@@ -8,6 +8,8 @@ __pycache__/
 dist/
 build/
 .DS_Store
+.playwright-mcp/
+output/playwright/
 .env
 .env.*
 !.env.example

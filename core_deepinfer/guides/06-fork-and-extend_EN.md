@@ -2,7 +2,7 @@
 
 [中文](06-fork-and-extend.md) · [Series](00-index_EN.md)
 
-Following CoreCoder does not mean matching README layout or a line count. A better test is whether changing one decision has an observable consequence through the complete loop, with an independent oracle that can identify the mistake.
+A useful reference lets you change one decision and observe its consequence through the complete loop, with an independent oracle that can identify the mistake. Protect readable size without treating a smaller line count as the goal.
 
 Run [`examples/engine_batch.py`](../../examples/engine_batch.py). It submits requests through the library, cancels one, steps a round, drains the rest and reuses the same engine. Healthy outputs are checked against ordinary greedy generation. Embedding the engine does not require going through its CLI.
 

@@ -6,7 +6,7 @@
 
 A small NumPy inference engine for reading, running and changing inference state transitions. Requests share one real execution path: queue, restore or prefill, propose drafts, allocate verification work, write KV, reject a branch, roll back and commit.
 
-Inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer) and the runnable-core approach of [CoreCoder](https://github.com/he-yufeng/CoreCoder). This is an independent community project, not an official DeepSeek package.
+An independent community reference inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer)'s state and scheduling mechanisms. Not affiliated with or endorsed by DeepSeek.
 
 The model performs real float64 attention, projections and feed-forward operations with **random, untrained parameters**. It does not load DeepSeek weights or produce useful language. No GPU, model download, API key, server or network access is needed after installation.
 

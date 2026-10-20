@@ -37,6 +37,5 @@ DSpark 包括特定的草稿结构、训练后的置信度与采样方法。本�
 
 - [nano-deepinfer](https://github.com/Alexander-Qiu/nano-deepinfer)：CPU 小型 Llama 推理，支持真实小权重、调度和 KV。我们不再重复这条通用模型执行路线。
 - [mini-deepinfer](https://github.com/AkiYangDev/mini-deepinfer)：以 Qwen2/DeepSeek distill 权重及 Ascend 方向讲请求执行。它的硬件与权重范围，以其验证记录为准。
-- [CoreCoder](https://github.com/he-yufeng/CoreCoder)：本项目沿用的组织思路，可运行的小实现与源码导读互相对照；不是相同功能。
 
 这里选择的是不下载权重就能比较的状态与预算机制。不同项目有不同用途，不把缩短代码量本身当成贡献。

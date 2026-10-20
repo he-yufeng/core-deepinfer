@@ -2,7 +2,7 @@
 
 [中文](00-index.md) · [Project](../../README.md)
 
-CoreCoder makes an agent loop tangible: let it change a file, then follow the tool result back into the next model call. An inference reference should offer the same experience. Submit a request, inspect what committed, then trace the state used by the next forward.
+Submit a request, inspect what committed, then follow the state used by the next forward. Pause at a commit boundary, compare the target and draft cursors, and check what the next model call actually reads.
 
 These six walkthroughs follow the same `Engine`, `Runner` and `TinyModel`. The subject is not a collection of formulas but the lifetime of an actual request: admission, recovery, proposal, verification, rollback, commit and termination. The older isolated numerical examples remain useful for examining individual details.
 

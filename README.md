@@ -6,7 +6,7 @@
 
 A small NumPy inference engine for studying DeepInfer's state transitions. Submit requests, restore a cached prefix, propose draft tokens, allocate verification work, write real KV, roll back a rejected branch, and keep generating. The same loop is available as a Python library and a CLI.
 
-It follows the idea behind [CoreCoder](https://github.com/he-yufeng/CoreCoder): the explanation should lead to code you can run, not stop at a diagram. The default demo uses the real engine, not a scripted response or a second implementation.
+The default demo uses the actual request loop, not a scripted response or a separate implementation. Its trace records the restore, verification and commit events that really happened.
 
 The model performs real float64 attention, projections and feed-forward operations. Its parameters are **random and untrained**. Token IDs are not useful language output, and this project does not load DeepSeek weights. The purpose is to make inference state inspectable, not to squeeze a production model onto a laptop.
 
@@ -24,7 +24,7 @@ core-deepinfer
 core-deepinfer guide --list
 ```
 
-Install from this repository for now; the PyPI release has not been published yet. The package includes the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. The checkout also includes the tests, examples and validation records referenced below.
+The source installation includes tests, examples and the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. Built wheels contain the same guide text, not a separately maintained copy.
 
 The default run exercises two requests with a shared prefix, a cancelled request, speculative writes and rollback, a hot state hit, an expired short state with a surviving encoder prefix, and finally a cold miss. It checks emitted tokens **and the complete committed state** against ordinary greedy decoding.
 
