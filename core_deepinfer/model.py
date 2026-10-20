@@ -27,12 +27,18 @@ def attention(q, k, v, visible):
 
 
 @dataclass
-class State:
+class EncoderState:
     owner: str
     tokens: tuple[int, ...]
     encoder_keys: np.ndarray
     encoder_values: np.ndarray
     source: np.ndarray
+    shared_keys: np.ndarray
+    shared_values: np.ndarray
+
+
+@dataclass
+class State(EncoderState):
     decoder_keys: tuple[np.ndarray, ...]
     decoder_values: tuple[np.ndarray, ...]
 
@@ -105,7 +111,39 @@ class TinyModel:
         keys, values = base @ wk, base @ wv
         x = x + 0.25 * attention(base @ wq, keys, values, positions[None, :] <= positions[:, None]) @ wo
         source = x + 0.2 * np.tanh(norm(x) @ f1) @ f2
-        shared_k, shared_v = source @ self.shared[0], source @ self.shared[1]
+        encoder = EncoderState(
+            self.identity,
+            tokens,
+            keys,
+            values,
+            source,
+            source @ self.shared[0],
+            source @ self.shared[1],
+        )
+        return self._decode(encoder, mode=mode, keep=keep, encoded_rows=n)
+
+    def replay(self, encoder, *, mode="exact", keep=None):
+        return self._decode(encoder, mode=mode, keep=keep, encoded_rows=0)
+
+    def _decode(self, encoder, *, mode, keep, encoded_rows):
+        if not isinstance(encoder, EncoderState) or encoder.owner != self.identity:
+            raise ValueError("encoder source belongs to different model parameters or layout")
+        tokens = self.tokens(encoder.tokens)
+        n = len(tokens)
+        keys, values, source = encoder.encoder_keys, encoder.encoder_values, encoder.source
+        shared_k, shared_v = encoder.shared_keys, encoder.shared_values
+        if any(
+            value.shape != (n, self.width) or not np.isfinite(value).all()
+            for value in (keys, values, source, shared_k, shared_v)
+        ):
+            raise ValueError("encoder arrays must match the token prefix and model width")
+        if mode not in ("exact", "mask", "compact"):
+            raise ValueError("mode must be exact, mask or compact")
+        if mode != "exact":
+            keep = positive_int(keep, "keep")
+            if keep < self.window:
+                raise ValueError("keep must cover at least one local window")
+        positions = np.arange(n)
         lower = 0 if mode == "exact" else max(0, n - keep)
         live = positions[positions >= lower] if mode == "compact" else positions
         x = source[live].copy()
@@ -125,9 +163,22 @@ class TinyModel:
             x = x + 0.2 * np.tanh(norm(x) @ f1) @ f2
             decoder_k.append(k[-self.window :].copy())
             decoder_v.append(v[-self.window :].copy())
-        state = State(self.identity, tokens, keys, values, source, tuple(decoder_k), tuple(decoder_v))
+        state = State(
+            self.identity,
+            tokens,
+            keys,
+            values,
+            source,
+            shared_k,
+            shared_v,
+            tuple(decoder_k),
+            tuple(decoder_v),
+        )
         return Forward(
-            norm(x) @ self.head, state, live, {"encoder_rows": n, "consumer_rows": len(live) * self.depth}
+            norm(x) @ self.head,
+            state,
+            live,
+            {"encoder_rows": encoded_rows, "consumer_rows": len(live) * self.depth},
         )
 
     def step(self, state, token):
@@ -141,8 +192,10 @@ class TinyModel:
         keys = np.concatenate([state.encoder_keys, base @ wk])
         values = np.concatenate([state.encoder_values, base @ wv])
         x = x + 0.25 * attention(base @ wq, keys, values, np.ones((1, pos + 1), dtype=bool)) @ wo
-        source = np.concatenate([state.source, x + 0.2 * np.tanh(norm(x) @ f1) @ f2])
-        shared_k, shared_v = source @ self.shared[0], source @ self.shared[1]
+        new_source = x + 0.2 * np.tanh(norm(x) @ f1) @ f2
+        source = np.concatenate([state.source, new_source])
+        shared_k = np.concatenate([state.shared_keys, new_source @ self.shared[0]])
+        shared_v = np.concatenate([state.shared_values, new_source @ self.shared[1]])
         x = source[-1:].copy()
         decoder_k, decoder_v = [], []
         for index, (wq, wk, wv, wo, cq, co, f1, f2) in enumerate(self.layers):
@@ -156,7 +209,15 @@ class TinyModel:
             decoder_k.append(k)
             decoder_v.append(v)
         state = State(
-            self.identity, (*state.tokens, token), keys, values, source, tuple(decoder_k), tuple(decoder_v)
+            self.identity,
+            (*state.tokens, token),
+            keys,
+            values,
+            source,
+            shared_k,
+            shared_v,
+            tuple(decoder_k),
+            tuple(decoder_v),
         )
         return Forward(
             norm(x) @ self.head, state, np.array([pos]), {"encoder_rows": 1, "consumer_rows": self.depth}

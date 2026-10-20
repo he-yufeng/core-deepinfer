@@ -27,7 +27,11 @@ bounded 相对 exact 的误差是另一个结果。这里随机模型的误差�
 
 DSpark 包括特定的草稿结构、训练后的置信度与采样方法。本项目只固定 greedy 契约：目标模型是最终决定者，首个拒绝之后的草稿不能提交，接受 EOS 后不能继续输出。
 
-`generate_speculative` 为了保留一个容易读的 oracle，会对目标前缀重新执行完整 forward；提交后也重建已接受分支。它没有模拟一个加速比。单独的 `StateRing` 测试展示缓存覆写问题，并不等于生成器已实现缓存事务。
+`speculative.py` 中的 `generate_speculative` 保留了容易读的重算 oracle：每轮对目标前缀执行完整 forward，最后重建已提交分支。它不用于新引擎的执行主链。
+
+当前 `Engine.step` 进入 `Runner.verify`，真实写入目标与草稿的局部 K/V ring；验证后恢复接受边界，补进替代或bonus，再继续增量计算。热状态、Encoder前缀恢复、短状态TTL和预算重分配都已接入同一条请求链。初始prefill以后，验证不再重算完整前缀。共享来源K/V也只追加新位置的投影。
+
+这仍不是DSpark复现：恢复使用复制快照，CPU顺序交错执行请求，不做GPU并行batch；调度置信度是草稿自概率，不是训练出的接受头；成本是合成输入。端到端默认exact，有界恢复需要显式选择。完整跟读见[源码系列](../article/00-index.md)。
 
 ## 与其他精简项目的区别
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="640" viewBox="0 0 980 640">
+<title>Core DeepInfer: actual local CPU demo output</title>
+<desc>Untrained CPU model with an injected clock and synthetic costs. Not a benchmark.</desc>
+<rect width="980" height="640" rx="12" fill="#111827"/>
+<text x="28" y="32" fill="#9ca3af" font-family="monospace" font-size="13">core-deepinfer / CPU reference</text>
+<g fill="#f3f4f6" font-family="monospace" font-size="14">
+<text x="28" y="64" xml:space="preserve">$ python -m core_deepinfer</text>
+<text x="28" y="86" xml:space="preserve"></text>
+<text x="28" y="108" xml:space="preserve">Core DeepInfer | NumPy CPU | random, untrained weights</text>
+<text x="28" y="130" xml:space="preserve">Greedy output matches: True</text>
+<text x="28" y="152" xml:space="preserve">Committed state max error: 0</text>
+<text x="28" y="174" xml:space="preserve"></text>
+<text x="28" y="196" xml:space="preserve">cold_and_prefix_reuse | fake clock 0s | request-1=cold(0), request-2=hot(4)</text>
+<text x="28" y="218" xml:space="preserve">  request-1: length, tokens=[17, 17, 17, 17, 17, 17, 17, 17]</text>
+<text x="28" y="240" xml:space="preserve">  request-2: length, tokens=[12, 15, 16, 15, 16]</text>
+<text x="28" y="262" xml:space="preserve">  request-3: cancelled, tokens=[]</text>
+<text x="28" y="284" xml:space="preserve">  target rollback: 6 positions</text>
+<text x="28" y="306" xml:space="preserve"></text>
+<text x="28" y="328" xml:space="preserve">hot | fake clock 0s | request-4=hot(4)</text>
+<text x="28" y="350" xml:space="preserve">  request-4: length, tokens=[17, 17, 17, 17]</text>
+<text x="28" y="372" xml:space="preserve">  target rollback: 0 positions</text>
+<text x="28" y="394" xml:space="preserve"></text>
+<text x="28" y="416" xml:space="preserve">warm | fake clock 3s | request-5=warm(4)</text>
+<text x="28" y="438" xml:space="preserve">  request-5: length, tokens=[17, 17, 17, 17]</text>
+<text x="28" y="460" xml:space="preserve">  target rollback: 0 positions</text>
+<text x="28" y="482" xml:space="preserve"></text>
+<text x="28" y="504" xml:space="preserve">cold_again | fake clock 200s | request-6=cold(0)</text>
+<text x="28" y="526" xml:space="preserve">  request-6: length, tokens=[17, 17, 17, 17]</text>
+<text x="28" y="548" xml:space="preserve">  target rollback: 0 positions</text>
+<text x="28" y="570" xml:space="preserve"></text>
+<text x="28" y="592" xml:space="preserve">Actual target query rows: {'encoder_rows': 40, 'consumer_rows': 132, 'incremental_steps': 32}</text>
+<text x="28" y="614" xml:space="preserve">Row counts are not a speedup. Demo costs are synthetic; weights are not trained.</text>
+</g>
+</svg>

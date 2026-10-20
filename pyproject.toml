@@ -27,7 +27,7 @@ Issues = "https://github.com/he-yufeng/core-deepinfer/issues"
 packages = ["core_deepinfer"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/core_deepinfer", "/tests", "/docs", "/README.md", "/README_CN.md", "/LICENSE", "/pyproject.toml", "/.github/workflows/tests.yml"]
+include = ["/core_deepinfer", "/tests", "/docs", "/article", "/examples", "/assets", "/README.md", "/README_CN.md", "/LICENSE", "/pyproject.toml", "/.github/workflows/tests.yml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

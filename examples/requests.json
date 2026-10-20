@@ -1,0 +1,5 @@
+[
+  {"request_id": "short", "prompt": [1, 2, 3, 4], "max_tokens": 4},
+  {"request_id": "extension", "prompt": [1, 2, 3, 4, 5], "max_tokens": 8},
+  {"request_id": "other", "prompt": [9, 8, 7], "max_tokens": 6}
+]

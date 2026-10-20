@@ -1,0 +1,1356 @@
+{
+  "demo": {
+    "scope": "Real NumPy CPU engine; random untrained weights; no language or throughput claim",
+    "clock_scope": "Injected fake clock; no waiting or measured latency",
+    "budget_scope": "Synthetic costs and draft self-probabilities, not DSpark's learned confidence",
+    "same_tokens_as_greedy": true,
+    "committed_state_max_error": 0.0,
+    "rejected_prompt_error": "tokens must be a nonempty sequence of in-vocabulary integers",
+    "stages": [
+      {
+        "name": "cold_and_prefix_reuse",
+        "fake_clock_seconds": 0.0,
+        "results": [
+          {
+            "request_id": "request-1",
+            "prompt": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "tokens": [
+              17,
+              17,
+              17,
+              17,
+              17,
+              17,
+              17,
+              17
+            ],
+            "finish_reason": "length",
+            "error": null,
+            "committed_positions": 12,
+            "accepted_drafts": 0,
+            "proposed_drafts": 25
+          },
+          {
+            "request_id": "request-2",
+            "prompt": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "tokens": [
+              12,
+              15,
+              16,
+              15,
+              16
+            ],
+            "finish_reason": "length",
+            "error": null,
+            "committed_positions": 10,
+            "accepted_drafts": 0,
+            "proposed_drafts": 10
+          },
+          {
+            "request_id": "request-3",
+            "prompt": [
+              9,
+              8,
+              7
+            ],
+            "tokens": [],
+            "finish_reason": "cancelled",
+            "error": null,
+            "committed_positions": 0,
+            "accepted_drafts": 0,
+            "proposed_drafts": 0
+          }
+        ],
+        "restores": [
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-1",
+            "role": "target",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-1",
+            "role": "draft",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 4
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-2",
+            "role": "target",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 1,
+            "recovery_mode": "exact",
+            "encoder_rows": 1,
+            "consumer_rows": 3
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-2",
+            "role": "draft",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 1,
+            "recovery_mode": "exact",
+            "encoder_rows": 1,
+            "consumer_rows": 1
+          }
+        ],
+        "work": {
+          "target": {
+            "encoder_rows": 24,
+            "consumer_rows": 72,
+            "incremental_steps": 20
+          },
+          "draft": {
+            "encoder_rows": 53,
+            "consumer_rows": 53,
+            "incremental_steps": 49
+          }
+        },
+        "target_rolled_back_positions": 6,
+        "budget_rounds": 8,
+        "events": [
+          {
+            "tick": 0,
+            "kind": "queued",
+            "request_id": "request-1",
+            "prompt_positions": 4,
+            "max_tokens": 8
+          },
+          {
+            "tick": 0,
+            "kind": "queued",
+            "request_id": "request-2",
+            "prompt_positions": 5,
+            "max_tokens": 5
+          },
+          {
+            "tick": 0,
+            "kind": "queued",
+            "request_id": "request-3",
+            "prompt_positions": 3,
+            "max_tokens": 4
+          },
+          {
+            "tick": 0,
+            "kind": "finished",
+            "request_id": "request-3",
+            "finish_reason": "cancelled",
+            "error": null,
+            "generated_positions": 0
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-1",
+            "role": "target",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-1",
+            "role": "draft",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 4
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-2",
+            "role": "target",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 1,
+            "recovery_mode": "exact",
+            "encoder_rows": 1,
+            "consumer_rows": 3
+          },
+          {
+            "tick": 1,
+            "kind": "restore",
+            "request_id": "request-2",
+            "role": "draft",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 1,
+            "recovery_mode": "exact",
+            "encoder_rows": 1,
+            "consumer_rows": 1
+          },
+          {
+            "tick": 1,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1",
+              "request-2"
+            ],
+            "total_tokens": 4,
+            "lengths": [
+              2,
+              2
+            ],
+            "graph_size": 4,
+            "expected_tokens": 2.398357583056583,
+            "estimated_ms": 1.4,
+            "newer_lengths": [
+              2,
+              2
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 1,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 5,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 1,
+            "kind": "commit",
+            "request_id": "request-2",
+            "tokens": [
+              12
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 4,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 2,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1",
+              "request-2"
+            ],
+            "total_tokens": 4,
+            "lengths": [
+              2,
+              2
+            ],
+            "graph_size": 4,
+            "expected_tokens": 2.398357583056583,
+            "estimated_ms": 1.4,
+            "newer_lengths": [
+              2,
+              2
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 2,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 5,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 2,
+            "kind": "commit",
+            "request_id": "request-2",
+            "tokens": [
+              15
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 3,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 3,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1",
+              "request-2"
+            ],
+            "total_tokens": 4,
+            "lengths": [
+              2,
+              2
+            ],
+            "graph_size": 4,
+            "expected_tokens": 2.361169992918034,
+            "estimated_ms": 1.4,
+            "newer_lengths": [
+              2,
+              2
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 3,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 5,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 3,
+            "kind": "commit",
+            "request_id": "request-2",
+            "tokens": [
+              16
+            ],
+            "accepted": 0,
+            "verified_drafts": 1,
+            "discarded_target": 1,
+            "discarded_draft": 2,
+            "planned_positions": 2,
+            "target_steps": 2
+          },
+          {
+            "tick": 4,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1",
+              "request-2"
+            ],
+            "total_tokens": 2,
+            "lengths": [
+              1,
+              1
+            ],
+            "graph_size": 2,
+            "expected_tokens": 2.0,
+            "estimated_ms": 1.2,
+            "newer_lengths": [
+              1,
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 4,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 4,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 4,
+            "kind": "commit",
+            "request_id": "request-2",
+            "tokens": [
+              15
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 1,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 5,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1",
+              "request-2"
+            ],
+            "total_tokens": 2,
+            "lengths": [
+              1,
+              1
+            ],
+            "graph_size": 2,
+            "expected_tokens": 2.0,
+            "estimated_ms": 1.2,
+            "newer_lengths": [
+              1,
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 5,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 3,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 5,
+            "kind": "commit",
+            "request_id": "request-2",
+            "tokens": [
+              16
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 0,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 5,
+            "kind": "finished",
+            "request_id": "request-2",
+            "finish_reason": "length",
+            "error": null,
+            "generated_positions": 5
+          },
+          {
+            "tick": 6,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 6,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 2,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 7,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 7,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 1,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 8,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-1"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 8,
+            "kind": "commit",
+            "request_id": "request-1",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 0,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 8,
+            "kind": "finished",
+            "request_id": "request-1",
+            "finish_reason": "length",
+            "error": null,
+            "generated_positions": 8
+          }
+        ]
+      },
+      {
+        "name": "hot",
+        "fake_clock_seconds": 0.0,
+        "results": [
+          {
+            "request_id": "request-4",
+            "prompt": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "tokens": [
+              17,
+              17,
+              17,
+              17
+            ],
+            "finish_reason": "length",
+            "error": null,
+            "committed_positions": 8,
+            "accepted_drafts": 0,
+            "proposed_drafts": 6
+          }
+        ],
+        "restores": [
+          {
+            "tick": 9,
+            "kind": "restore",
+            "request_id": "request-4",
+            "role": "target",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 0
+          },
+          {
+            "tick": 9,
+            "kind": "restore",
+            "request_id": "request-4",
+            "role": "draft",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 0
+          }
+        ],
+        "work": {
+          "target": {
+            "encoder_rows": 4,
+            "consumer_rows": 12,
+            "incremental_steps": 4
+          },
+          "draft": {
+            "encoder_rows": 10,
+            "consumer_rows": 10,
+            "incremental_steps": 10
+          }
+        },
+        "target_rolled_back_positions": 0,
+        "budget_rounds": 4,
+        "events": [
+          {
+            "tick": 8,
+            "kind": "queued",
+            "request_id": "request-4",
+            "prompt_positions": 4,
+            "max_tokens": 4
+          },
+          {
+            "tick": 9,
+            "kind": "restore",
+            "request_id": "request-4",
+            "role": "target",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 0
+          },
+          {
+            "tick": 9,
+            "kind": "restore",
+            "request_id": "request-4",
+            "role": "draft",
+            "cache": "hot",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 0
+          },
+          {
+            "tick": 9,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-4"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 9,
+            "kind": "commit",
+            "request_id": "request-4",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 3,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 10,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-4"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 10,
+            "kind": "commit",
+            "request_id": "request-4",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 2,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 11,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-4"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 11,
+            "kind": "commit",
+            "request_id": "request-4",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 1,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 12,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-4"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 12,
+            "kind": "commit",
+            "request_id": "request-4",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 0,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 12,
+            "kind": "finished",
+            "request_id": "request-4",
+            "finish_reason": "length",
+            "error": null,
+            "generated_positions": 4
+          }
+        ]
+      },
+      {
+        "name": "warm",
+        "fake_clock_seconds": 3.0,
+        "results": [
+          {
+            "request_id": "request-5",
+            "prompt": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "tokens": [
+              17,
+              17,
+              17,
+              17
+            ],
+            "finish_reason": "length",
+            "error": null,
+            "committed_positions": 8,
+            "accepted_drafts": 0,
+            "proposed_drafts": 6
+          }
+        ],
+        "restores": [
+          {
+            "tick": 13,
+            "kind": "restore",
+            "request_id": "request-5",
+            "role": "target",
+            "cache": "warm",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 13,
+            "kind": "restore",
+            "request_id": "request-5",
+            "role": "draft",
+            "cache": "warm",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 4
+          }
+        ],
+        "work": {
+          "target": {
+            "encoder_rows": 4,
+            "consumer_rows": 24,
+            "incremental_steps": 4
+          },
+          "draft": {
+            "encoder_rows": 10,
+            "consumer_rows": 14,
+            "incremental_steps": 10
+          }
+        },
+        "target_rolled_back_positions": 0,
+        "budget_rounds": 4,
+        "events": [
+          {
+            "tick": 12,
+            "kind": "queued",
+            "request_id": "request-5",
+            "prompt_positions": 4,
+            "max_tokens": 4
+          },
+          {
+            "tick": 13,
+            "kind": "restore",
+            "request_id": "request-5",
+            "role": "target",
+            "cache": "warm",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 13,
+            "kind": "restore",
+            "request_id": "request-5",
+            "role": "draft",
+            "cache": "warm",
+            "reused_positions": 4,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 0,
+            "consumer_rows": 4
+          },
+          {
+            "tick": 13,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-5"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 13,
+            "kind": "commit",
+            "request_id": "request-5",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 3,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 14,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-5"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 14,
+            "kind": "commit",
+            "request_id": "request-5",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 2,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 15,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-5"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 15,
+            "kind": "commit",
+            "request_id": "request-5",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 1,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 16,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-5"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 16,
+            "kind": "commit",
+            "request_id": "request-5",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 0,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 16,
+            "kind": "finished",
+            "request_id": "request-5",
+            "finish_reason": "length",
+            "error": null,
+            "generated_positions": 4
+          }
+        ]
+      },
+      {
+        "name": "cold_again",
+        "fake_clock_seconds": 200.0,
+        "results": [
+          {
+            "request_id": "request-6",
+            "prompt": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "tokens": [
+              17,
+              17,
+              17,
+              17
+            ],
+            "finish_reason": "length",
+            "error": null,
+            "committed_positions": 8,
+            "accepted_drafts": 0,
+            "proposed_drafts": 6
+          }
+        ],
+        "restores": [
+          {
+            "tick": 17,
+            "kind": "restore",
+            "request_id": "request-6",
+            "role": "target",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 17,
+            "kind": "restore",
+            "request_id": "request-6",
+            "role": "draft",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 4
+          }
+        ],
+        "work": {
+          "target": {
+            "encoder_rows": 8,
+            "consumer_rows": 24,
+            "incremental_steps": 4
+          },
+          "draft": {
+            "encoder_rows": 14,
+            "consumer_rows": 14,
+            "incremental_steps": 10
+          }
+        },
+        "target_rolled_back_positions": 0,
+        "budget_rounds": 4,
+        "events": [
+          {
+            "tick": 16,
+            "kind": "queued",
+            "request_id": "request-6",
+            "prompt_positions": 4,
+            "max_tokens": 4
+          },
+          {
+            "tick": 17,
+            "kind": "restore",
+            "request_id": "request-6",
+            "role": "target",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 12
+          },
+          {
+            "tick": 17,
+            "kind": "restore",
+            "request_id": "request-6",
+            "role": "draft",
+            "cache": "cold",
+            "reused_positions": 0,
+            "suffix_positions": 0,
+            "recovery_mode": "exact",
+            "encoder_rows": 4,
+            "consumer_rows": 4
+          },
+          {
+            "tick": 17,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-6"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 17,
+            "kind": "commit",
+            "request_id": "request-6",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 3,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 18,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-6"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 18,
+            "kind": "commit",
+            "request_id": "request-6",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 2,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 19,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-6"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 19,
+            "kind": "commit",
+            "request_id": "request-6",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 1,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 20,
+            "kind": "budget",
+            "request_id": null,
+            "requests": [
+              "request-6"
+            ],
+            "total_tokens": 1,
+            "lengths": [
+              1
+            ],
+            "graph_size": 1,
+            "expected_tokens": 1.0,
+            "estimated_ms": 1.0,
+            "newer_lengths": [
+              1
+            ],
+            "padding": 0,
+            "confidence_source": "draft model self-probability, not a trained DSpark acceptance head",
+            "cost_source": "synthetic input"
+          },
+          {
+            "tick": 20,
+            "kind": "commit",
+            "request_id": "request-6",
+            "tokens": [
+              17
+            ],
+            "accepted": 0,
+            "verified_drafts": 0,
+            "discarded_target": 0,
+            "discarded_draft": 0,
+            "planned_positions": 1,
+            "target_steps": 1
+          },
+          {
+            "tick": 20,
+            "kind": "finished",
+            "request_id": "request-6",
+            "finish_reason": "length",
+            "error": null,
+            "generated_positions": 4
+          }
+        ]
+      }
+    ],
+    "work": {
+      "target": {
+        "encoder_rows": 40,
+        "consumer_rows": 132,
+        "incremental_steps": 32
+      },
+      "draft": {
+        "encoder_rows": 87,
+        "consumer_rows": 91,
+        "incremental_steps": 79
+      }
+    },
+    "work_scope": "Engine query rows only; excludes oracle checks; not a FLOP or speed estimate"
+  }
+}

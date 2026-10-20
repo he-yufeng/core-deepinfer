@@ -1,94 +1,136 @@
 # Core DeepInfer
 
-**Read the mechanism. Run the counterexample. Change it and test again.**
+**Follow a request from prefill to the last committed token.**
 
-[中文](README_CN.md) · [Source map](docs/SOURCE_MAP.md) · [Validation](docs/VALIDATION.md)
+[中文](README_CN.md) · [Read the source](article/00-index_EN.md) · [Upstream source map](docs/SOURCE_MAP.md) · [Validation](docs/VALIDATION.md)
 
 [![CPU reference checks](https://github.com/he-yufeng/core-deepinfer/actions/workflows/tests.yml/badge.svg)](https://github.com/he-yufeng/core-deepinfer/actions/workflows/tests.yml)
 
-A small, executable companion to DeepInfer's state and scheduling ideas. Instead of wrapping another chat model, it makes four questions inspectable on a CPU:
+A small NumPy inference engine for studying DeepInfer's state transitions. Submit requests, restore a cached prefix, propose draft tokens, allocate verification work, write real KV, roll back a rejected branch, and keep generating. The same loop is available as a Python library and a CLI.
 
-- Does a smaller attention mask actually remove query computation?
-- Why can bounded replay match compact replay but differ from exact recovery?
-- What happens when speculative work overwrites a window and is then rejected?
-- How can newer confidence redistribute work without changing the total budget?
+It follows the idea behind [CoreCoder](https://github.com/he-yufeng/CoreCoder): the explanation should lead to code you can run, not stop at a diagram. The default demo uses the real engine, not a scripted response or a second implementation.
 
-The model performs real float64 attention, projections and feed-forward operations with **random, untrained parameters**. It has no language capability and does not load DeepSeek weights. The budget experiment uses **synthetic costs**, not measured GPU timings. This is an independent teaching project, not a smaller production DeepInfer or a benchmark reproduction.
+The model performs real float64 attention, projections and feed-forward operations. Its parameters are **random and untrained**. Token IDs are not useful language output, and this project does not load DeepSeek weights. The purpose is to make inference state inspectable, not to squeeze a production model onto a laptop.
 
-## Run the experiments
+## Run the complete loop first
 
-Python 3.10+ and NumPy. No GPU, model download, service or API key.
+Python 3.10+ and NumPy. No model download, GPU, API key or service.
 
 ```bash
 git clone https://github.com/he-yufeng/core-deepinfer.git
 cd core-deepinfer
 python -m pip install -e '.[dev]'
-python -m core_deepinfer all
+python -m core_deepinfer
+```
+
+The default run exercises two requests with a shared prefix, a cancelled request, speculative writes and rollback, a hot state hit, an expired short state with a surviving encoder prefix, and finally a cold miss. It checks emitted tokens **and the complete committed state** against ordinary greedy decoding.
+
+![Actual CPU demo: cache restoration, cancellation, rollback and greedy-state comparison](assets/demo.svg)
+
+Rendered from actual CLI stdout by `python examples/render_demo.py`. The raw numerical record is also available in [engine-demo.json](docs/results/engine-demo.json).
+
+The expiry clock is injected, so the demo does not actually sleep for 200 seconds. Its cost curve is synthetic. Query-row counters describe work that ran; they are not GPU timings, FLOPs or a speedup.
+
+```bash
+python -m core_deepinfer demo --trace
+python -m core_deepinfer demo --trace --json
 python -m pytest -q
 ```
 
-You can also run from the checkout with NumPy already installed:
+## Use the engine, then read it
+
+```python
+from core_deepinfer import Engine, EngineConfig, TinyModel
+
+target = TinyModel(seed=7)
+draft = TinyModel(seed=8, depth=1)
+engine = Engine(target, draft, config=EngineConfig(max_batch_tokens=8))
+
+first = engine.submit([1, 2, 3, 4], max_tokens=8)
+second = engine.submit([1, 2, 3, 4, 5], max_tokens=5)
+
+for result in engine.run():
+    print(result.request_id, result.tokens, result.finish_reason)
+
+# Reuse the same engine and cache for the next request.
+result = engine.generate([1, 2, 3, 4], max_tokens=4)
+print(engine.metrics())
+```
+
+Call `step()` instead of `run()` to inspect each budget and commit event. `cancel(request_id)` works before admission or between steps. `run()` returns newly completed results once; `result(request_id)` keeps them addressable. A failed request is explicit: healthy peers drain, then `RequestError.results` carries the batch. Previously reported failures do not poison later requests.
+
+`examples/engine_batch.py` runs these APIs and checks their outputs.
+
+## What is actually connected
+
+| Component | Behavior in the engine |
+| --- | --- |
+| Model | Causal encoder, projected shared source KV and layered local-attention consumers; incremental decode retains the shared projections |
+| Local state | Each consumer's actual keys and values pass through position-tagged rings; the next forward reads those rings |
+| Verification | Draft and target both execute real forwards. Verification writes the selected drafts, restores the accepted checkpoint, and commits only replacement or bonus tokens |
+| Recovery | A hot hit restores the complete cursor. A warm hit reuses encoder/source KV and replays consumers. A cold miss performs prefill. A longer prompt can extend a stored shorter prefix |
+| Scheduler | Round-robin request interleaving with a bounded useful-token budget, ragged draft availability, EOS, cancellation and explicit errors |
+| Budget | Previous confidence selects a total; current confidence redistributes that same total. The resulting lengths control how many draft positions the target actually verifies |
+
+This is sequential NumPy execution, not parallel GPU batching. Draft self-probability is a visible scheduling heuristic, not DSpark's learned acceptance confidence. Checkpoints copy arrays instead of using a production allocator or an optimized undo log.
+
+## The execution path
+
+```mermaid
+flowchart LR
+    Q[Request queue] --> R[Restore or prefill]
+    R --> D[Draft proposals]
+    D --> B[Verification budget]
+    B --> V[Target KV writes]
+    V --> U[Restore accepted checkpoint]
+    U --> C[Commit tokens]
+    C -->|remaining work| Q
+    C -->|stop or length| F[Result and cache]
+```
+
+Start with [`Engine.step`](core_deepinfer/engine.py), then follow a single verification into [`Runner.verify`](core_deepinfer/runtime.py). The readable unit is a request's lifetime, not a list of unrelated features.
+
+## Code map and walkthroughs
+
+| File | What to follow |
+| --- | --- |
+| [`engine.py`](core_deepinfer/engine.py) | Admission, recovery, budget, commit, cancellation and terminal results |
+| [`runtime.py`](core_deepinfer/runtime.py) | Real KV rings, snapshots, draft proposals and reversible target verification |
+| [`model.py`](core_deepinfer/model.py) | Full versus incremental attention, encoder/source sharing and consumer replay |
+| [`cache.py`](core_deepinfer/cache.py) | Exact prefix keys, independent TTLs, copy isolation and ring contents |
+| [`budget.py`](core_deepinfer/budget.py) | Survival probabilities, ragged availability, graph padding and budget conservation |
+| [`demo.py`](core_deepinfer/demo.py) | The complete engine under an injected clock, checked against a separate oracle |
+| [`speculative.py`](core_deepinfer/speculative.py) | The simple recomputing oracle, kept for comparison rather than used by the engine |
+
+The [bilingual source-reading series](article/00-index_EN.md) follows the loop, state recovery, speculative transactions, scheduling, numerical model and extension points. Each part links runnable tests and a change worth trying. Longer walkthroughs of the original DeepInfer implementation live in [AI Infra Notes](https://github.com/he-yufeng/ai-infra-notes).
+
+## Run your own request batch
+
+```bash
+python -m core_deepinfer generate --prompt 1,2,3,4 --max-tokens 12 --trace
+python -m core_deepinfer generate --prompt 1,2,3 --prompt 4,5,6 --batch-budget 4 --json
+python -m core_deepinfer generate --input examples/requests.json --greedy --json
+```
+
+Omit the draft model in the library, or use `--greedy`, for ordinary incremental decoding. Request files contain token IDs and limits, not text prompts or executable tools.
+
+For the smaller numerical detail experiments:
 
 ```bash
 python -m core_deepinfer replay --length 32 --keep 8 --seed 7 --json
-python -m core_deepinfer speculative --json
-python -m core_deepinfer cache --json
 python -m core_deepinfer budget --json
+python -m core_deepinfer cache --json
+python -m core_deepinfer speculative --json
 ```
 
-`all` runs every experiment. JSON output carries its evidence scope alongside the numbers.
+The default recovery is exact. Explicit `--recovery compact --keep 8` requests bounded recovery and may change outputs. Mask and compact can agree on the same bounded graph without agreeing with exact recovery. Both preserve the complete encoder source; fewer consumer rows do not mean the whole model does proportionally less work.
 
-## Start with a result you can explain
+## Validation and scope
 
-For the default replay case, three consumer layers process a 32-token input. Both paths keep the same shared encoder source. `mask` processes all query rows, while `compact` processes the last eight:
+[VALIDATION.md](docs/VALIDATION.md) records the tested environment, commands, source fingerprints and packaging checks. Tests compare cached generation with ordinary greedy decoding across seeds and windows, exercise overwritten-ring restoration, cold/hot/warm recovery, budget redistribution, ragged batches, failure isolation and engine reuse. Smaller allocation cases are checked against an exhaustive oracle.
 
-```text
-mask consumer rows:       96
-compact consumer rows:    24
-shared source rows:       32
-mask/compact max error:   about 2.6e-15
-bounded/exact max error:  about 2.05
-```
+Not implemented: trained DeepSeek models, MLA, MoE, mHC, quantization, CP, CUDA Graphs, GPU/NPU execution, distributed KV storage, persistent request sessions or an HTTP server. There is no production latency or model-quality claim. These are deliberate boundaries, not interchangeable evidence from the original project.
 
-These are an executed local float64 example and counted query rows, **not a 4x speedup**. The first error checks two implementations of the same bounded graph. The second deliberately shows that the bounded graph is not the exact graph. Changing the seed or keep length changes that error; it is not a model-quality metric.
+Original code and documentation are [MIT](LICENSE). Referenced upstream implementations retain their own licensing and attribution. Independent community project, not affiliated with or endorsed by DeepSeek.
 
-The full encoder source remains available to consumers in both bounded paths. Compacting queries is not equivalent to deleting all prefix data.
-
-## What is implemented
-
-| Experiment | Implemented behavior | Deliberate simplification |
-| --- | --- | --- |
-| Replay | Causal encoder, shared source KV, layered SWA consumers; exact, bounded mask and compact forwards; incremental decode oracle | Single head, NumPy, no MLA/MoE/quantization/CP; no trained DeepSeek architecture |
-| Speculative verification | Real target/draft forwards, greedy prefix acceptance, first rejection, bonus, EOS, committed-state comparison | Recomputes full target prefixes as an oracle; no probabilistic rejection sampling or speed claim |
-| State | Exact prefix/boundary/layout keys, independent TTL caches, deep-copy isolation, rollback after ring overwrite | In-process arrays and fake clock; no network, persistence or memory-pressure control |
-| Budget | Cumulative survival probabilities, discrete graph costs, total-budget search and newer-confidence redistribution | Caller-provided confidence and synthetic curve; no confidence head, CUDA Graph or asynchronous execution |
-
-The ring rollback and TTL are isolated state experiments. They are not secretly wired into the speculative generator, which rebuilds its committed branch. Keeping that distinction visible is part of the point.
-
-## Read it in this order
-
-1. [`model.py`](core_deepinfer/model.py): full versus incremental causal computation, source KV and local consumer KV.
-2. [`replay.py`](core_deepinfer/replay.py): query layout, placeholder rows and the numerical comparison.
-3. [`speculative.py`](core_deepinfer/speculative.py): check which tokens may commit, independently of how quickly they were proposed.
-4. [`cache.py`](core_deepinfer/cache.py): observe overwritten slots before and after rollback; expire short state without evicting the prefix.
-5. [`budget.py`](core_deepinfer/budget.py): separate useful token budget from graph padding and try a different cost curve.
-
-The [source map](docs/SOURCE_MAP.md) links each idea to a pinned upstream implementation and lists what this project does differently. Longer source walkthroughs are in [AI Infra Notes](https://github.com/he-yufeng/ai-infra-notes).
-
-## Small changes worth trying
-
-Increase decoder depth while keeping the local window fixed and compare bounded recovery with the exact oracle. Then remove the keep lower bound from just one local mask: the mask/compact test should catch the semantic change.
-
-Give both requests high confidence but make the next graph much more expensive. The best useful budget need not grow just because more drafts are likely to be accepted.
-
-Finally, replace ring snapshot restoration with only restoring the cursor. The overwrite test should fail because the old values have already been lost.
-
-## Validation and limits
-
-The current source tests cover numerical alignment across multiple seeds, future-token causality, a bounded-versus-exact counterexample, greedy verification, exhaustive budget comparisons, TTL boundaries and overwritten-slot rollback. Exact commands and the tested environment are recorded in [VALIDATION.md](docs/VALIDATION.md).
-
-This project does not claim to reproduce V4.1 quality, DSpark's learned confidence, GPU scheduling overlap, 3FS, Mooncake, or production throughput. It has no server and executes no tools or shell commands from model output.
-
-Original implementation and documentation: [MIT](LICENSE). Referenced upstream code retains its own licensing and attribution. Not affiliated with or endorsed by DeepSeek.
-
-If a runnable source companion is useful to you, a Star is welcome. Issues with a small counterexample are especially helpful.
+If this helps you follow the state transitions, a Star is welcome. A small failing example is even more useful.

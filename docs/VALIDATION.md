@@ -1,8 +1,8 @@
 # Validation
 
-The checked-in [CPU experiment results](results/cpu-experiments.json) and [validation receipt](results/validation.json) come from running this implementation, not DeepInfer kernels or DeepSeek weights. The receipt records hashes of the Python modules, tests, build configuration and CI definition so that the tested source can be identified without depending on a mutable branch name.
+The checked-in [engine demo](results/engine-demo.json), [detail experiments](results/cpu-experiments.json) and [validation receipt](results/validation.json) record this CPU implementation, not DeepInfer kernels or DeepSeek weights. The receipt identifies tested Python, example, build and workflow files by SHA-256 rather than a mutable branch name.
 
-## Reproduce locally
+## Reproduce
 
 Use Python 3.10 or newer in a fresh environment:
 
@@ -10,52 +10,67 @@ Use Python 3.10 or newer in a fresh environment:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
-ruff check core_deepinfer tests
-ruff format --check core_deepinfer tests
+ruff check core_deepinfer tests examples
+ruff format --check core_deepinfer tests examples
 python -m pytest tests -q
-python -m core_deepinfer all --json
+python -m core_deepinfer demo --trace --json
+python examples/engine_batch.py
+python -m core_deepinfer generate --input examples/requests.json --json
 python -m build
 ```
 
-The recorded local run used Python 3.14.5, NumPy 2.5.4, pytest 9.1.1, Ruff 0.17.1 and Hatchling 1.32.4 on macOS arm64. All **84 tests passed**, lint and formatting passed, and the sdist and wheel built successfully. The wheel was also installed and exercised outside the checkout; isolated imports resolved to the environment's `site-packages`, not the source tree. These are local results. The [CPU workflow](../.github/workflows/tests.yml) independently checks Python 3.10, 3.12 and 3.14 on Linux; its current status is visible in [GitHub Actions](https://github.com/he-yufeng/core-deepinfer/actions/workflows/tests.yml).
+The local environment is macOS arm64, Python 3.14.5, NumPy 2.5.4, pytest 9.1.1, Ruff 0.17.1 and Hatchling 1.32.4. **205 tests passed**. The recorded local package build uses existing build dependencies with `python -m build --no-isolation`, followed by a dependency-free installation of this project's own wheel. A new isolated editable dependency installation is not part of that local receipt. The source example and installed-module/console checks are recorded separately.
 
-## What the checks establish
+The [CPU workflow](../.github/workflows/tests.yml) is configured for Python 3.10, 3.12 and 3.14 on Linux. A workflow definition is not a completed CI run; remote results must be checked independently.
 
-| Area | Check | What it does not establish |
+## What is checked
+
+| Area | Actual checks | What they do not establish |
 | --- | --- | --- |
-| Causal model | Incremental steps match full exact forwards across three seeds; changing future tokens preserves earlier logits | Compatibility with trained DeepSeek checkpoints |
-| Bounded replay | Nine seed/shape cases compare mask and compact logits and local keys at absolute tolerance `1e-10`; complete encoder source is retained | Equivalence of bounded replay and exact recovery |
-| Counterexample | A fixed bounded case differs from the exact oracle while its mask and compact paths agree | A task-quality estimate or an acceptable production error threshold |
-| Greedy verification | Three seeds and three draft widths match ordinary generation; explicit logits cover first/middle rejection, all-accepted bonus and EOS | DSpark sampling, learned confidence or faster inference |
-| State | Exact key identity, TTL boundaries, copy isolation and restoration of overwritten ring contents; checkpoints survive a cache round trip | Concurrency, persistence, distributed leases or memory-pressure handling |
-| Budget | Four random confidence cases match exhaustive allocation search; redistribution conserves useful budget; graph padding stays separate | The accuracy of a real hardware cost model |
-| Packaging | Build from sdist, wheel installation, isolated import and outside-checkout CLI smoke checks; archive contents exclude local environments and private artifacts | A PyPI release or a hosted service |
+| Model | Full and incremental causal forwards, future-token causality, cached shared projections, encoder-only replay | DeepSeek checkpoint compatibility or trained language capability |
+| Transactional runner | Actual KV rings, overwrite then rollback, middle/first rejection, all-accepted bonus, EOS, foreign checkpoint rejection, failure restoration | Efficient GPU journaling, probabilistic rejection sampling or parallel verification |
+| Request loop | Multiple requests, smaller-than-queue budgets, cancellation, errors after healthy peers drain, reusable engine after a reported failure, results delivered once | An asynchronous server or vectorized GPU batching |
+| Recovery | Cold/hot/warm/cold transitions, longest stored prefix extension, model/layout isolation, complete source retention | Persistent or distributed caches, concurrency safety or a cost-optimal prefix policy |
+| Budget | Rectangular and ragged exhaustive oracles, main-position admission, fixed-total newer-confidence redistribution that changes executed widths, padding separation | Calibrated acceptance confidence or a measured hardware curve |
+| Differential scenarios | Twelve seeded mixed-lifecycle scenarios spanning three clock epochs, windows 1/2/4/8, small cache capacities, EOS and cancellation | Exhaustive testing of every possible configuration |
+| CLI and package | Default integrated demo, JSON and repeated-prompt requests, malformed input errors, library example, build, archive contents and outside-checkout wheel entry points | A PyPI publication, deployment or completed remote CI |
 
-Additional regressions cover a single-pass draft iterator, low-precision NumPy TTL input and unsigned NumPy chunk indices. They matter because ordinary Python lists, floats and integers would not expose those failure paths.
+The default demo runs the real engine, not a scripted model. Its separate ordinary-greedy oracle compares tokens and every stored encoder/shared/local KV array. Oracle computation is excluded from the engine's query-row counters. Tests also count initial prefill calls and forbid re-prefilling during verification.
 
-## Reading the default results
+## Failure sensitivity
 
-For `python -m core_deepinfer all --json` with the default seed and replay settings:
+The overwrite tests exercise proposals longer than the ring window. A separate-copy mutation that restores only the ring cursor, leaving overwritten values and tags in place, must fail. The original working tree is not reverted or overwritten for that experiment.
 
-- Replay processes 96 consumer query rows in mask mode and 24 in compact mode. Both retain 32 encoder source rows. The local maximum mask/compact logit difference is about `2.6e-15`; bounded/exact differs by about `2.05`.
-- The budget example chooses four useful positions, with request lengths `[3, 1]`. Reversing the confidence input redistributes them to `[1, 3]`. Its `1.7 ms` estimate comes entirely from the supplied synthetic curve and sampler cost.
-- The cache example expires short state at its TTL without evicting the longer-lived prefix, then restores the three original ring values after overwrite.
-- Speculative and ordinary greedy generation produce the same 16 tokens. The default random draft accepts zero of 70 proposed tokens. This is a correctness example, not a useful language response or an acceptance-rate benchmark. Separate tests exercise successful prefix acceptance.
+Regression cases include:
 
-Small floating-point differences across NumPy versions and platforms are expected; compare against the stated tolerance, not the last printed digit. A reduced consumer row count is not a measured end-to-end speedup: encoder work, complete source storage and other operations remain.
+- Key and value shapes are checked before either ring write, so malformed output cannot leave one cursor advanced alone.
+- A terminal cache-write error remains explicit without making emitted tokens disagree with committed state.
+- Generated request names skip caller-selected names.
+- A reported failure does not cause every later `run()` on the same engine to raise the old error again.
+- Single-pass draft input, low-precision TTL and unsigned NumPy chunk indices retain their earlier boundary coverage.
 
-## Inspect an installed wheel
+The receipt records the mutation result separately from the normal green tests. A failing mutant is not counted as another passing product test.
 
-After building, install the wheel in an environment with NumPy and run from another directory:
+## Read the results correctly
+
+The integrated demo uses an injected clock at 0, 3 and 200 seconds. It does not wait that long or measure latency. Its cost curve is synthetic, and draft self-probability is not a learned target-acceptance head.
+
+The older `all` detail experiment still reports 96 versus 24 consumer query rows for a 32-token replay case. Both paths retain the complete source. Near-zero mask/compact error checks the same bounded graph; its difference from exact recovery is intentional. None of these numbers proves a fourfold model speedup or a task-quality guarantee.
+
+Check exact-mode generation against the stated absolute tolerance `1e-10`, not the last printed floating-point digit. Explicit bounded recovery can change subsequent tokens and is not covered by an exact-output claim.
+
+## Installed-wheel check
+
+After building in an environment with NumPy:
 
 ```bash
 python -m pip install --no-deps dist/core_deepinfer-0.1.0-py3-none-any.whl
-# Change to a directory outside this checkout before running these commands.
+# Move outside the checkout before the next commands.
 python -I -c 'import core_deepinfer; print(core_deepinfer.__file__)'
-python -I -m core_deepinfer all --json
-core-deepinfer replay --length 24 --keep 4 --json
+python -I -m core_deepinfer demo --json
+core-deepinfer generate --prompt 1,2,3 --max-tokens 4 --json
 ```
 
-The import path should contain `site-packages`. No model download, API call or network service is part of any experiment.
+The isolated import should resolve under `site-packages`. The sdist includes examples and the bilingual walkthroughs; the wheel includes the executable package. Neither includes `.venv`, private artifacts, credentials or bytecode.
 
-No GPU/NPU, original native engine, model-quality evaluation or production throughput test was run for this project. Ring rollback and TTL remain independent demonstrations; the speculative generator rebuilds the committed branch rather than using a transactional ring cache.
+No GPU/NPU, original native engine, trained model quality or production throughput validation is claimed. Checkpoints copy arrays, source arrays grow in memory, and the synchronous engine retains request history for inspection. It is a readable reference rather than a production memory manager.

@@ -6,6 +6,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .model import positive_int
+
 
 @dataclass(frozen=True)
 class Budget:
@@ -25,35 +27,60 @@ def survival_probabilities(confidence):
     return np.cumprod(values, axis=1)
 
 
-def ranking(rates):
+def _limits(rates, draft_limits):
+    if draft_limits is None:
+        return (rates.shape[1],) * len(rates)
+    limits = tuple(draft_limits)
+    if len(limits) != len(rates) or any(
+        isinstance(n, (bool, np.bool_))
+        or not isinstance(n, (int, np.integer))
+        or not 0 <= n <= rates.shape[1]
+        for n in limits
+    ):
+        raise ValueError("draft_limits must match the available positions of every request")
+    return tuple(int(n) for n in limits)
+
+
+def ranking(rates, draft_limits=None):
+    limits = _limits(rates, draft_limits)
     return sorted(
-        (
-            (-float(rate), request, position)
-            for request, row in enumerate(rates)
-            for position, rate in enumerate(row)
-        )
+        (-float(rate), request, position)
+        for request, row in enumerate(rates)
+        for position, rate in enumerate(row[: limits[request]])
     )
 
 
-def reallocate(total, confidence):
+def reallocate(total, confidence, *, draft_limits=None):
     rates = survival_probabilities(confidence)
+    limits = _limits(rates, draft_limits)
     requests = len(rates)
-    if type(total) is not int or not requests <= total <= requests + rates.size:
+    if type(total) is not int or not requests <= total <= requests + sum(limits):
         raise ValueError("budget must fit the main positions and available drafts")
     lengths = [1] * requests
-    for _, request, _ in ranking(rates)[: total - requests]:
+    for _, request, _ in ranking(rates, limits)[: total - requests]:
         lengths[request] += 1
     return tuple(lengths)
 
 
-def choose_budget(confidence, curve, *, sampler_ms=0.0, slope_ms=0.0):
+def choose_budget(confidence, curve, *, sampler_ms=0.0, slope_ms=0.0, draft_limits=None, max_budget=None):
     rates = survival_probabilities(confidence)
+    limits = _limits(rates, draft_limits)
     requests = len(rates)
+    cap = requests + sum(limits)
+    if max_budget is not None:
+        cap = min(cap, positive_int(max_budget, "max_budget"))
+        if cap < requests:
+            raise ValueError("max_budget cannot fit all main token positions")
     if any(not math.isfinite(x) or x < 0 for x in (sampler_ms, slope_ms)):
         raise ValueError("runtime costs must be finite and nonnegative")
+    ranked = ranking(rates, limits)
     if not curve:
         return Budget(
-            requests + rates.size, (1 + rates.shape[1],) * requests, None, float(requests + rates.sum()), None
+            cap,
+            reallocate(cap, confidence, draft_limits=limits),
+            None,
+            float(requests + sum(-entry[0] for entry in ranked[: cap - requests])),
+            None,
         )
     sizes = []
     for size, cost in curve:
@@ -64,18 +91,26 @@ def choose_budget(confidence, curve, *, sampler_ms=0.0, slope_ms=0.0):
         sizes.append(size)
     if sizes[-1] < requests:
         raise ValueError("no graph can fit the main token positions")
-    candidates = [0.0, *(-entry[0] for entry in ranking(rates))]
+    candidates = [0.0, *(-entry[0] for entry in ranked)]
     best = None
     expected = float(requests)
     for added, benefit in enumerate(candidates):
-        expected += benefit
         total = requests + added
+        if total > cap:
+            break
+        expected += benefit
         graph_index = bisect_left(sizes, total)
         if graph_index == len(sizes):
             break
         graph_size, baseline = curve[graph_index]
         cost = baseline + slope_ms * graph_size + sampler_ms
-        candidate = Budget(total, reallocate(total, confidence), graph_size, expected, cost)
+        candidate = Budget(
+            total,
+            reallocate(total, confidence, draft_limits=limits),
+            graph_size,
+            expected,
+            cost,
+        )
         if best is None or expected / cost > best.expected_tokens / best.estimated_ms:
             best = candidate
     return best
