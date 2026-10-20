@@ -2,6 +2,8 @@
 
 **Follow a request from prefill to the last committed token.**
 
+[Source and examples](https://github.com/he-yufeng/core-deepinfer) · [中文](https://github.com/he-yufeng/core-deepinfer/blob/main/README_CN.md)
+
 A small NumPy inference engine for reading, running and changing inference state transitions. Requests share one real execution path: queue, restore or prefill, propose drafts, allocate verification work, write KV, reject a branch, roll back and commit.
 
 Inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer) and the runnable-core approach of [CoreCoder](https://github.com/he-yufeng/CoreCoder). This is an independent community project, not an official DeepSeek package.

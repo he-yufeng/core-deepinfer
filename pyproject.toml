@@ -20,6 +20,8 @@ dev = ["pytest>=8", "ruff>=0.9", "build>=1.2"]
 core-deepinfer = "core_deepinfer.cli:main"
 
 [project.urls]
+Repository = "https://github.com/he-yufeng/core-deepinfer"
+Issues = "https://github.com/he-yufeng/core-deepinfer/issues"
 "Source readings" = "https://github.com/he-yufeng/ai-infra-notes"
 "Upstream DeepInfer" = "https://github.com/deepseek-ai/DeepInfer"
 

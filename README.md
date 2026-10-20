@@ -15,12 +15,16 @@ The model performs real float64 attention, projections and feed-forward operatio
 Python 3.10+ and NumPy. No model download, GPU, API key or service.
 
 ```bash
-python -m pip install core-deepinfer
+git clone https://github.com/he-yufeng/core-deepinfer.git
+cd core-deepinfer
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
 core-deepinfer
 core-deepinfer guide --list
 ```
 
-The wheel includes the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. The source distribution also includes tests, examples and validation records; see [working on the source](#working-on-the-source) before running source-tree commands below.
+Install from this repository for now; the PyPI release has not been published yet. The package includes the complete bilingual guide text. Use `core-deepinfer guide 03` or `core-deepinfer guide 03 --lang zh` to read a chapter offline. The checkout also includes the tests, examples and validation records referenced below.
 
 The default run exercises two requests with a shared prefix, a cancelled request, speculative writes and rollback, a hot state hit, an expired short state with a surviving encoder prefix, and finally a cold miss. It checks emitted tokens **and the complete committed state** against ordinary greedy decoding.
 
@@ -126,17 +130,16 @@ The default recovery is exact. Explicit `--recovery compact --keep 8` requests b
 
 ## Working on the source
 
-The [PyPI source distribution](https://pypi.org/project/core-deepinfer/#files) includes the tests and examples referenced above:
+After the source installation above, run the checks from the checkout:
 
 ```bash
-python -m pip download --no-deps --no-binary=:all: core-deepinfer==0.1.0
-tar -xzf core_deepinfer-0.1.0.tar.gz
-cd core_deepinfer-0.1.0
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
 python -m pytest -q
+ruff check core_deepinfer tests examples
+ruff format --check core_deepinfer tests examples
+python -m build
 ```
+
+The sdist includes tests and examples as well as the executable modules. A wheel built from it also includes all fourteen guide texts; installing a wheel is not a substitute for running the source tests.
 
 The guides in `core_deepinfer/guides` are the same documents printed by the installed CLI, not a separately maintained copy.
 

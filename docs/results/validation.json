@@ -1,5 +1,5 @@
 {
-  "recorded_at_utc": "2026-10-20T19:50:40.886683+00:00",
+  "recorded_at_utc": "2026-10-20T21:21:19.423791+00:00",
   "scope": "Integrated NumPy CPU reference; random untrained model, not upstream native/GPU/model-quality validation",
   "environment": {
     "python": "3.14.5",
@@ -16,9 +16,9 @@
   },
   "source_sha256": {
     ".github/workflows/tests.yml": "6881c25ffc7f6bc6e6eb48d689287f6bc146b0fef4dd80a023705b24779cbbb1",
-    "README.md": "6a604b6bb355b09c97739a2d87404eadc29c080e3fe7487d32e204bfb7567d67",
-    "README_CN.md": "f5ea3e5af32b1cb11bd5854819a87751147cdbf3f82ffded39ea18dbeac4e0c5",
-    "README_PYPI.md": "c3954c95aba9b406fc166aa618f5ae0c10fda1f07555895dd40bf001ca50f61a",
+    "README.md": "fbbadc167f7b7ab2c2e053ecc2dad19550a053eccca8a22c225d145eba8241cf",
+    "README_CN.md": "7d8e84826fbae19ae8644fd46155d1d3e3c49363a3a5272e8feee20713e1f647",
+    "README_PYPI.md": "82387a9cec3f71ee12b7039de3dde040117ba3c696b44ba3360e9df3d0563d0c",
     "core_deepinfer/__init__.py": "ffb76fb68d1bfdc9cfc1f27c69b513546457ae7dad7efd0279b12c0745bb110f",
     "core_deepinfer/__main__.py": "935a1c1166b0c1ea35a82256345000bf2c73ded718d77773bc27a71ecce28f7d",
     "core_deepinfer/budget.py": "0417943333b4a713d2b8e7842981829f98377dc261988f096c5c17c3893aab80",
@@ -49,7 +49,7 @@
     "docs/VALIDATION.md": "2e7ed078576ecd00420073f7fa4f7457acd55f634edc7048580babdc82c95e4f",
     "examples/engine_batch.py": "f47b7a12dccc992b08e659b89833ed8e943a6ff4c4f33b87c8d1a1da5a9eafd6",
     "examples/render_demo.py": "ba72391e5a8d222a44d5dd3699842fc930494c3d71f31cbe9e9fbd644fca64db",
-    "pyproject.toml": "39ba2f5da038375ffd659242f36e737f7d35f3e44d4bf1b61681fcbf6512be68",
+    "pyproject.toml": "ad9df5150b16caaddf337a2421c746e18d8432af77149d5ebef7fe719caf3639",
     "tests/test_budget.py": "5dd32af1b5460e66ac4b998688120d10de45d459c3ca7b7bc79b2553b102083b",
     "tests/test_budget_ragged.py": "dd199cfa1a26e7fea3bf84c1b1896feac2ea5d9ae5239862c82fc93f9c8a8d75",
     "tests/test_cache.py": "68a32b4a733fa17c81f3931a6a71bc1310843b1265308c11bae9d065f5ed1f06",

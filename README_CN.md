@@ -21,12 +21,16 @@ Core DeepInfer 把这条执行链写成了一个小型 NumPy 引擎：请求入�
 Python 3.10+，运行依赖只有 NumPy。不下载权重，不要 API key，也不启动服务。
 
 ```bash
-python -m pip install core-deepinfer
+git clone https://github.com/he-yufeng/core-deepinfer.git
+cd core-deepinfer
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
 core-deepinfer
 core-deepinfer guide --list --lang zh
 ```
 
-安装包自带完整双语导读。`core-deepinfer guide 03 --lang zh` 会直接打印第三篇，不开浏览器，也不临时联网。完整测试、示例和验证记录在源码分发包里，执行下文的仓内命令前，先按[修改源码](#修改源码)准备工作目录。
+当前先从仓库安装，PyPI 版本尚未发布。安装包自带完整双语导读，`core-deepinfer guide 03 --lang zh` 会直接打印第三篇，不开浏览器，也不临时联网。完整测试、示例和验证记录都在这个 checkout 中，不另放一套只能看的演示。
 
 默认 demo 不是把几个预写好的数字打印出来。它实际提交两个有共同前缀的请求，取消第三个请求，运行草稿与目标模型，再让同一前缀依次经历热命中、短状态过期后的恢复、完整过期后的冷启动。
 
@@ -128,17 +132,16 @@ python -m core_deepinfer speculative --json
 
 ## 修改源码
 
-完整测试和示例放在 [PyPI 源码分发包](https://pypi.org/project/core-deepinfer/#files)，不是只给一个能打印 demo 的 wheel：
+完成前面的源码安装后，在仓库里运行检查：
 
 ```bash
-python -m pip download --no-deps --no-binary=:all: core-deepinfer==0.1.0
-tar -xzf core_deepinfer-0.1.0.tar.gz
-cd core_deepinfer-0.1.0
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
 python -m pytest -q
+ruff check core_deepinfer tests examples
+ruff format --check core_deepinfer tests examples
+python -m build
 ```
+
+构建出的 sdist 包含测试、示例和完整源码，不是只给一个能打印 demo 的 wheel。由它构建的 wheel 也会带上十四份导读；安装包能运行和源码测试通过，两项分别验证。
 
 `core_deepinfer/guides` 里的文档就是 CLI 离线读取的那一份，没有另维护一套安装包导读。模型中的 Encoder/consumer 分工与运行时的 prefill/decode 是两个维度；这里两种执行阶段都有，不是一个只演示 decode 的算例。
 
