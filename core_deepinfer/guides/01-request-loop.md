@@ -2,7 +2,7 @@
 
 [English](01-request-loop_EN.md) · [系列目录](00-index.md)
 
-先不看 attention。打开 [`engine.py`](../core_deepinfer/engine.py)，提交两个长度不同的请求，把每轮最多执行的位置数设成二。你会看到：有请求还没轮到，有请求已经提交了一个 Token，还有请求可以在下一轮开始前取消。这些状态不是展示层的装饰，它们决定下一次模型调用有没有资格发生。
+先不看 attention。打开 [`engine.py`](../engine.py)，提交两个长度不同的请求，把每轮最多执行的位置数设成二。你会看到：有请求还没轮到，有请求已经提交了一个 Token，还有请求可以在下一轮开始前取消。这些状态不是展示层的装饰，它们决定下一次模型调用有没有资格发生。
 
 ```python
 from core_deepinfer import Engine, EngineConfig
@@ -34,7 +34,7 @@ print([(r.request_id, r.finish_reason) for r in engine.run()])
 prepare(request)
 proposal = draft.propose(width)
 lengths = plan_verification_work(proposals)
-decision = target.verify(proposal.tokens[:length - 1], max_tokens=remaining)
+decision = target.verify(proposal.tokens[: length - 1], max_tokens=remaining)
 synchronize_draft_with_committed_tokens(decision)
 commit_or_finish(request, decision)
 ```
@@ -49,11 +49,22 @@ commit_or_finish(request, decision)
 
 错误请求也不会让结果列表变短。健康请求先排空，随后 `RequestError.results` 同时包含成功与失败项；调用方可以定位哪个请求失败，而不是猜哪条输入被省略了。
 
+## 中断不等于请求失败
+
+`KeyboardInterrupt` 和 `SystemExit` 不属于普通 `Exception`。只给一个请求套上 `except Exception`，既救不回已从队列取出的请求，也不能撤销别的请求预取的草稿。
+
+`step` 因此保存入队顺序和本轮 journal。每个请求起草前保存 target、draft、输出边界和旧置信度。中断时撤回未提交的分支，保留已经提交的请求，再将仍未结束的请求放回可继续执行的队列，最后原样抛出中断。下一次 `run` 从提交边界接着走，不把已经执行过的工作计数抹掉。
+
+终态也有边界：如果最后一个 Token 已提交，只是在写缓存时被打断，重试应当完成结果持久到进程内表的步骤，而不是再生成一个 EOS。这里没有落盘协议；第二次中断发生在清理中、强制杀进程或掉电，不在这个恢复承诺里。
+
+配置使用冻结的数据类，并复制调用方的成本曲线。否则外部将一份空列表改成零尺寸曲线，就可能使一轮永远接纳不了任何请求。
+
 ## 跑这几条检查
 
 ```bash
 python -m pytest tests/test_engine.py -k 'small_budget or cancelled or failure' -q
 python -m pytest tests/test_engine_failures.py tests/test_engine_reuse.py -q
+python -m pytest tests/test_interruptions.py tests/test_interrupt_boundaries.py -q
 ```
 
 一个值得试的修改：另拷一份，把未完成请求重新放到队首。再让一个长请求和多个短请求共享很小的预算，观察轮转顺序怎样改变。这里先看公平性与结果完整性，不要用总耗时给它贴性能结论。

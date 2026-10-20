@@ -1,6 +1,6 @@
 # Read inference through Core DeepInfer
 
-[中文](00-index.md) · [Project](../README.md)
+[中文](00-index.md) · [Project](../../README.md)
 
 CoreCoder makes an agent loop tangible: let it change a file, then follow the tool result back into the next model call. An inference reference should offer the same experience. Submit a request, inspect what committed, then trace the state used by the next forward.
 
@@ -14,7 +14,9 @@ python -m core_deepinfer demo --trace
 python examples/engine_batch.py
 ```
 
-The demo uses real model forwards and KV rings, not scripted token playback. The parameters are random and untrained, so the token IDs have no language capability. Synthetic costs and an injected clock are not hardware measurements. We are checking state transitions, not claiming an inference speedup. See [validation](../docs/VALIDATION.md) for the full scope.
+The demo uses real model forwards and KV rings, not scripted token playback. The parameters are random and untrained, so the token IDs have no language capability. Synthetic costs and an injected clock are not hardware measurements. We are checking state transitions, not claiming an inference speedup. See [validation](../../docs/VALIDATION.md) for the full scope.
+
+A PyPI installation includes these texts for offline reading: `core-deepinfer guide --list`, then `core-deepinfer guide 03`. Source links and test commands below refer to the complete source distribution; the wheel does not duplicate the test directory.
 
 ## The six parts
 
@@ -29,4 +31,4 @@ The demo uses real model forwards and KV rings, not scripted token playback. The
 
 Each part has executable test commands and one small modification to try. Those exercises are not unfinished features. They expose where a broken invariant becomes observable. Use a separate copy for destructive experiments rather than restoring over uncommitted work.
 
-The [source map](../docs/SOURCE_MAP.md) pins the upstream implementations and distinguishes them from our simplifications. Longer readings of the original project live in [AI Infra Notes](https://github.com/he-yufeng/ai-infra-notes). A result from this CPU engine is not evidence that an upstream kernel or production deployment was tested.
+The [source map](../../docs/SOURCE_MAP.md) pins the upstream implementations and distinguishes them from our simplifications. Longer readings of the original project live in [AI Infra Notes](https://github.com/he-yufeng/ai-infra-notes). A result from this CPU engine is not evidence that an upstream kernel or production deployment was tested.

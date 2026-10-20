@@ -46,10 +46,11 @@ class StateCache:
         ttl = float(ttl)
         if not math.isfinite(ttl) or ttl <= 0:
             raise ValueError("ttl must be finite and positive")
-        table[key] = (float(self.clock()) + ttl, deepcopy(value))
-        table.move_to_end(key)
-        while len(table) > self.capacity:
+        entry = (float(self.clock()) + ttl, deepcopy(value))
+        table.pop(key, None)
+        while len(table) >= self.capacity:
             table.popitem(last=False)
+        table[key] = entry
 
     def _get(self, table, key):
         entry = table.get(key)

@@ -2,7 +2,7 @@
 
 [English](05-model-and-replay_EN.md) · [系列目录](00-index.md)
 
-[`TinyModel`](../core_deepinfer/model.py) 故意没有把生产架构搬进来。单头 float64 attention、一个因果 Encoder、多层局部 consumer，再加一份共享来源 KV，足以让执行链出现真实的依赖与状态；参数随机且未训练，所以不拿它判断任务质量。
+[`TinyModel`](../model.py) 故意没有把生产架构搬进来。单头 float64 attention、一个因果 Encoder、多层局部 consumer，再加一份共享来源 KV，足以让执行链出现真实的依赖与状态；参数随机且未训练，所以不拿它判断任务质量。
 
 ## 输入位置和预测位置差一拍
 

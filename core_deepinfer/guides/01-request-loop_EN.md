@@ -2,7 +2,7 @@
 
 [中文](01-request-loop.md) · [Series](00-index_EN.md)
 
-Leave attention aside for a moment. Open [`engine.py`](../core_deepinfer/engine.py), submit two requests of different lengths, and allow only two useful positions per round. Some requests wait, others commit a token, and one can be cancelled before the next step. These states decide whether a model call should happen at all.
+Leave attention aside for a moment. Open [`engine.py`](../engine.py), submit two requests of different lengths, and allow only two useful positions per round. Some requests wait, others commit a token, and one can be cancelled before the next step. These states decide whether a model call should happen at all.
 
 ```python
 from core_deepinfer import Engine, EngineConfig
@@ -34,7 +34,7 @@ The normal path can be reduced to this skeleton:
 prepare(request)
 proposal = draft.propose(width)
 lengths = plan_verification_work(proposals)
-decision = target.verify(proposal.tokens[:length - 1], max_tokens=remaining)
+decision = target.verify(proposal.tokens[: length - 1], max_tokens=remaining)
 synchronize_draft_with_committed_tokens(decision)
 commit_or_finish(request, decision)
 ```
@@ -49,11 +49,22 @@ Without that distinction, a natural implementation mistake makes an engine unusa
 
 Failure also must not shorten the result list. Healthy peers drain before `RequestError.results` reports the batch, including its failed items. A caller can identify the failed input rather than reconstructing which input disappeared.
 
+## An interruption is not a request failure
+
+`KeyboardInterrupt` and `SystemExit` are not ordinary `Exception` subclasses. Catching only request errors cannot recover a dequeued request or rewind drafts already prefetched for its peers.
+
+`step` records queue order and a round journal. Before proposing, each selected request saves target and draft checkpoints, its output boundary and previous confidence. An interruption restores uncommitted branches, preserves completed commits, puts unfinished requests back in the queue, and propagates the original interruption. A later `run` resumes from the committed boundary without erasing work that actually executed.
+
+Termination has its own boundary. If the last token committed but cache insertion was interrupted, retry must finish publishing the result instead of generating another EOS. This is in-process recovery, not a disk protocol. A second interruption during cleanup, forced process termination or power loss is outside the contract.
+
+Configuration is frozen and copies the caller's cost curve. Otherwise changing an external empty list into a zero-size curve can leave every round unable to admit a request.
+
 ## Check it
 
 ```bash
 python -m pytest tests/test_engine.py -k 'small_budget or cancelled or failure' -q
 python -m pytest tests/test_engine_failures.py tests/test_engine_reuse.py -q
+python -m pytest tests/test_interruptions.py tests/test_interrupt_boundaries.py -q
 ```
 
 In a separate copy, put unfinished requests back at the front instead of the tail. Run a long request alongside several short ones under a small budget. Inspect progress order and result completeness first; elapsed time alone does not establish scheduler quality or a performance improvement.

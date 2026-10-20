@@ -9,11 +9,11 @@ import numpy as np
 from .budget import choose_budget, reallocate
 from .cache import StateCache, cache_key
 from .model import EncoderState, State, TinyModel, positive_int
-from .runtime import CachedState, Proposal, Runner, encoder_state
+from .runtime import CachedState, Checkpoint, Proposal, Runner, encoder_state
 from .speculative import token_limit
 
 
-@dataclass
+@dataclass(frozen=True)
 class EngineConfig:
     max_batch_tokens: int = 16
     max_active: int = 4
@@ -26,20 +26,21 @@ class EngineConfig:
 
     def __post_init__(self):
         for name in ["max_batch_tokens", "max_active", "draft_width", "keep"]:
-            setattr(self, name, positive_int(getattr(self, name), name))
+            object.__setattr__(self, name, positive_int(getattr(self, name), name))
         for name in ["state_ttl", "prefix_ttl"]:
             value = float(getattr(self, name))
             if not math.isfinite(value) or value <= 0:
                 raise ValueError(f"{name} must be finite and positive")
-            setattr(self, name, value)
+            object.__setattr__(self, name, value)
         if self.recovery_mode not in ("exact", "mask", "compact"):
             raise ValueError("recovery_mode must be exact, mask or compact")
-        if self.cost_curve:
-            self.cost_curve = tuple(self.cost_curve)
-            choose_budget(np.empty((1, 0)), self.cost_curve)
-            self.cost_curve = tuple(point for point in self.cost_curve if point[0] <= self.max_batch_tokens)
-            if not self.cost_curve:
+        curve = tuple(tuple(point) for point in self.cost_curve) if self.cost_curve is not None else ()
+        if curve:
+            choose_budget(np.empty((1, 0)), curve)
+            curve = tuple((size, float(cost)) for size, cost in curve if size <= self.max_batch_tokens)
+            if not curve:
                 raise ValueError("no configured graph fits max_batch_tokens")
+        object.__setattr__(self, "cost_curve", curve or None)
 
 
 @dataclass
@@ -81,6 +82,39 @@ class _Request:
     proposed: int = 0
 
 
+@dataclass
+class _RoundState:
+    request: _Request
+    target: Checkpoint
+    draft: Checkpoint | None
+    token_count: int
+    accepted: int
+    confidence: tuple[float, ...]
+    committed: bool = False
+
+    @classmethod
+    def capture(cls, request):
+        return cls(
+            request,
+            request.target.checkpoint(),
+            request.draft.checkpoint() if request.draft is not None else None,
+            len(request.tokens),
+            request.accepted,
+            request.confidence,
+        )
+
+    def restore(self):
+        if self.committed:
+            return
+        request = self.request
+        request.target.rollback(self.target)
+        if self.draft is not None:
+            request.draft.rollback(self.draft)
+        del request.tokens[self.token_count :]
+        request.accepted = self.accepted
+        request.confidence = self.confidence
+
+
 class RequestError(RuntimeError):
     def __init__(self, results):
         self.results = results
@@ -120,8 +154,8 @@ class Engine:
 
     def _save(self, runner):
         state = runner.capture()
-        hot = cache_key(runner.model.identity, self._layout(runner.model), runner.tokens)
-        prefix = cache_key(runner.model.identity, "encoder-v1", runner.tokens)
+        hot = cache_key(state.state.owner, self._layout(runner.model), runner.tokens)
+        prefix = cache_key(state.state.owner, "encoder-v1", runner.tokens)
         self.cache.put_state(hot, state, ttl=self.config.state_ttl)
         self.cache.put_prefix(prefix, encoder_state(state.state), ttl=self.config.prefix_ttl)
 
@@ -129,9 +163,10 @@ class Engine:
         runner = None
         reused = 0
         kind = "cold"
+        identity = model.identity
         for boundary in range(len(tokens), 0, -1):
             prefix = tokens[:boundary]
-            hot_key = cache_key(model.identity, self._layout(model), prefix)
+            hot_key = cache_key(identity, self._layout(model), prefix)
             cached = self.cache.get_state(hot_key)
             if cached is not None:
                 if not isinstance(cached, CachedState) or cached.state.tokens != prefix:
@@ -139,7 +174,7 @@ class Engine:
                 runner = Runner.from_cached(model, cached)
                 kind, reused = "hot", boundary
                 break
-            prefix_key = cache_key(model.identity, "encoder-v1", prefix)
+            prefix_key = cache_key(identity, "encoder-v1", prefix)
             source = self.cache.get_prefix(prefix_key)
             if source is not None:
                 if not isinstance(source, EncoderState) or source.tokens != prefix:
@@ -186,7 +221,6 @@ class Engine:
         return request_id
 
     def _finish(self, request, reason, error=None):
-        request.status = "finished"
         if reason in ("stop", "length"):
             try:
                 for runner in [request.target, request.draft]:
@@ -206,6 +240,7 @@ class Engine:
             request.proposed,
         )
         self._results[request.request_id] = result
+        request.status = "finished"
         self._emit(
             "finished",
             request.request_id,
@@ -216,21 +251,50 @@ class Engine:
 
     def cancel(self, request_id):
         request = self.requests[request_id]
-        if request.status == "finished":
+        if request_id in self._results:
+            request.status = "finished"
             return False
         self._finish(request, "cancelled")
         return True
 
     def _prepare(self, request):
+        if request.request_id in self._results:
+            request.status = "finished"
+            return
+        prefix = (*request.prompt, *request.tokens)
         if request.target is None:
-            request.target = self._open(self.target, request.prompt, request.request_id, "target")
-            if self.draft is not None and request.max_tokens:
-                request.draft = self._open(self.draft, request.prompt, request.request_id, "draft")
-            request.status = "running"
-        if request.max_tokens == 0:
+            request.target = self._open(self.target, prefix, request.request_id, "target")
+        if request.tokens and request.tokens[-1] == request.eos_id:
+            self._finish(request, "stop")
+            return
+        if len(request.tokens) >= request.max_tokens:
             self._finish(request, "length")
+            return
+        if self.draft is not None and request.draft is None:
+            request.draft = self._open(self.draft, prefix, request.request_id, "draft")
+        request.status = "running"
 
     def step(self):
+        queue_before = tuple(self._queue)
+        journal = {}
+        try:
+            return self._step_round(journal)
+        except BaseException as failure:
+            for key, saved in journal.items():
+                if key not in self._results:
+                    saved.restore()
+            pending = dict.fromkeys((*queue_before, *self._queue))
+            self._queue = deque(key for key in pending if key not in self._results)
+            for key in pending:
+                request = self.requests[key]
+                if key in self._results:
+                    request.status = "finished"
+                else:
+                    request.status = "running" if request.target is not None else "queued"
+            self._emit("step_aborted", error_type=type(failure).__name__, queued=tuple(self._queue))
+            raise
+
+    def _step_round(self, journal):
         start = len(self.trace)
         self.tick += 1
         cap = min(self.config.max_active, self.config.max_batch_tokens)
@@ -245,6 +309,7 @@ class Engine:
                 self._prepare(request)
                 if request.status == "finished":
                     continue
+                journal[request.request_id] = _RoundState.capture(request)
                 width = min(self.config.draft_width, request.max_tokens - len(request.tokens) - 1)
                 if request.draft is None:
                     proposal = Proposal((), (), ())
@@ -281,7 +346,7 @@ class Engine:
             cost_source="synthetic input" if self.config.cost_curve else "no cost curve",
         )
         for (request, proposal), length in zip(selected, lengths, strict=True):
-            before = request.target.checkpoint()
+            saved = journal[request.request_id]
             steps = request.target.steps
             try:
                 decision = request.target.verify(
@@ -296,6 +361,7 @@ class Engine:
                 request.tokens.extend(decision.tokens)
                 request.accepted += decision.accepted
                 request.confidence = proposal.confidence
+                saved.committed = True
                 self._emit(
                     "commit",
                     request.request_id,
@@ -314,9 +380,7 @@ class Engine:
                 else:
                     self._queue.append(request.request_id)
             except Exception as error:
-                request.target.rollback(before)
-                if request.draft is not None:
-                    request.draft.rollback(proposal.checkpoints[0])
+                saved.restore()
                 self._finish(request, "error", f"{type(error).__name__}: {error}")
         return self.trace[start:]
 

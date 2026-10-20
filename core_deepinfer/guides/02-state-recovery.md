@@ -4,7 +4,7 @@
 
 运行默认 demo 时，`hot` 和 `warm` 都可能显示复用了四个前缀位置。但 `hot` 直接继续生成，`warm` 还要执行 consumer。只报告“命中了多少 Token”，会把这两条计算路径混在一起。
 
-沿着 [`Engine._open`](../core_deepinfer/engine.py) 往下读，区分两个载荷：[`EncoderState`](../core_deepinfer/model.py) 保存因果 Encoder 的历史与共享来源 KV；[`CachedState`](../core_deepinfer/runtime.py) 还保存各层局部 KV 和当前 next-token logits。
+沿着 [`Engine._open`](../engine.py) 往下读，区分两个载荷：[`EncoderState`](../model.py) 保存因果 Encoder 的历史与共享来源 KV；[`CachedState`](../runtime.py) 还保存各层局部 KV 和当前 next-token logits。
 
 ## 两个载荷，两个生命周期
 
@@ -15,6 +15,8 @@
 ## 从键开始检查有效性
 
 一个可恢复状态的键包含模型参数指纹、布局、前缀哈希和精确边界。消费者布局还包含局部窗口、层数、宽度和恢复模式。否则，一份 compact 恢复出的近似局部状态可能被 exact 请求直接当成精确状态使用。
+
+指纹读取当前参数的内容，不只是构造时的 seed。直接修改 `model.head` 后，旧游标应当拒绝继续，新请求也不能命中旧 logits。这个小模型为此重新计算哈希，接受额外 CPU 开销；没有权重热更新或并发修改协议。
 
 完整 Encoder 来源可以跨这两个恢复模式共享，因为它本身没有被截断；局部状态不能因此共用同一个模式键。测试会先保存 exact 状态，再以 compact 模式请求同一前缀，确认走的是 Encoder 恢复，而不是错误的局部热命中。
 
@@ -43,7 +45,7 @@ result = engine.generate([1, 2, 3, 4, 5, 6], max_tokens=1)
 
 ```bash
 python -m pytest tests/test_engine.py -k 'real_cache or longest or another_models or bounded_layout' -q
-python -m pytest tests/test_cache.py -q
+python -m pytest tests/test_cache.py tests/test_model_identity.py -q
 ```
 
 试着只缩短 `state_ttl`，保留同一批请求，观察 `restore` 事件和 consumer 行数如何变化。别改默认随机参数，也别同时改预算，先保证你看到的变化只来自恢复路径。

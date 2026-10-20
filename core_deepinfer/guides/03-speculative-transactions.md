@@ -4,7 +4,7 @@
 
 只比较最终 Token，容易漏掉投机解码最重要的一半：输出拒绝了后缀，缓存有没有也拒绝它？
 
-[`Runner`](../core_deepinfer/runtime.py) 不把 ring 当成旁边的演示对象。每层真实局部 K/V 会拼成一个槽位，`advance` 把新位置写进去，下一次 forward 再通过绝对位置标签读回。窗口很小时，验证一批草稿就足以覆盖全部旧槽位。
+[`Runner`](../runtime.py) 不把 ring 当成旁边的演示对象。每层真实局部 K/V 会拼成一个槽位，`advance` 把新位置写进去，下一次 forward 再通过绝对位置标签读回。窗口很小时，验证一批草稿就足以覆盖全部旧槽位。
 
 ## 先写入，再决定提交
 
@@ -35,7 +35,7 @@
 
 ## 怎么证明没有偷偷重算整个前缀
 
-[`test_engine.py`](../tests/test_engine.py) 的 `test_target_and_draft_prefill_only_once_not_on_each_verification` 会计数真正的 prefill 调用。另一条测试在初始状态建立后禁止再次调用 `prefill`，再完成全接受与 bonus。
+[`test_engine.py`](../../tests/test_engine.py) 的 `test_target_and_draft_prefill_only_once_not_on_each_verification` 会计数真正的 prefill 调用。另一条测试在初始状态建立后禁止再次调用 `prefill`，再完成全接受与 bonus。
 
 更强的对照不仅比较输出，还比较全部 Encoder、共享 K/V 和逐层局部 K/V。快照恢复之后的第一次新 forward 也必须对齐。
 

@@ -4,7 +4,7 @@
 
 对标 CoreCoder，不是把 README 写成相似的排版，也不是追同样的行数。更有用的标准是：你改一个决定，能不能沿着完整执行链看到后果，并由独立对照指出哪里错了。
 
-先运行 [`examples/engine_batch.py`](../examples/engine_batch.py)。它通过库接口提交请求、取消一个请求、手动推进一轮、排空余下请求，再复用同一个引擎。每个健康结果都与普通 greedy 对照，不需要读 CLI 的实现才能嵌入自己的程序。
+先运行 [`examples/engine_batch.py`](../../examples/engine_batch.py)。它通过库接口提交请求、取消一个请求、手动推进一轮、排空余下请求，再复用同一个引擎。每个健康结果都与普通 greedy 对照，不需要读 CLI 的实现才能嵌入自己的程序。
 
 ## 最便宜的修改：调度策略
 
@@ -42,4 +42,4 @@ python -m core_deepinfer generate --input examples/requests.json --trace --json
 python -m pytest -q
 ```
 
-最后再构建、安装到环境，从仓库以外运行一次。源码目录里能 import，不代表 wheel、入口脚本和相对文档已经打包正确。具体记录见[验证说明](../docs/VALIDATION.md)。
+最后再构建、安装到环境，从仓库以外运行一次。源码目录里能 import，不代表 wheel、入口脚本和相对文档已经打包正确。具体记录见[验证说明](../../docs/VALIDATION.md)。

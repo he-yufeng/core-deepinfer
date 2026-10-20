@@ -4,7 +4,7 @@
 
 The default demo can report four reused positions for both a hot hit and a warm hit. The hot path resumes immediately; the warm path still executes consumers. Counting only matched tokens loses that distinction.
 
-Follow [`Engine._open`](../core_deepinfer/engine.py) and distinguish two payloads. [`EncoderState`](../core_deepinfer/model.py) contains causal encoder history and projected shared source KV. [`CachedState`](../core_deepinfer/runtime.py) also contains each consumer's local KV and the current next-token logits.
+Follow [`Engine._open`](../engine.py) and distinguish two payloads. [`EncoderState`](../model.py) contains causal encoder history and projected shared source KV. [`CachedState`](../runtime.py) also contains each consumer's local KV and the current next-token logits.
 
 ## Different payloads, independent lifetimes
 
@@ -15,6 +15,8 @@ The demo uses 100 seconds and 3 seconds to expose the two expiry boundaries. Tho
 ## Start with identity, not presence
 
 A recoverable state's key contains the parameter fingerprint, layout, prefix hash and exact boundary. The consumer layout also includes window, depth, width and recovery mode. Otherwise a bounded local state might be silently restored as an exact one.
+
+The fingerprint reads current parameter contents, not just the constructor seed. After changing `model.head`, an old cursor must reject further execution and a new request must not reuse old logits. This tiny model accepts the CPU cost of recomputing hashes; it has no weight hot-reload or concurrent mutation protocol.
 
 The full encoder source can be shared between recovery modes because it was not truncated. That does not make the local state interchangeable. A test saves an exact cursor, requests the same prefix with compact recovery, and checks that the engine replays from the encoder rather than accepting the wrong local hot hit.
 
@@ -43,7 +45,7 @@ The current policy chooses the longest stored prefix. It does not price a shorte
 
 ```bash
 python -m pytest tests/test_engine.py -k 'real_cache or longest or another_models or bounded_layout' -q
-python -m pytest tests/test_cache.py -q
+python -m pytest tests/test_cache.py tests/test_model_identity.py -q
 ```
 
 Change only `state_ttl` for a fixed request sequence, and inspect restore events and consumer row counts. Keep the model and budget unchanged so that the observed difference belongs to recovery rather than another variable.

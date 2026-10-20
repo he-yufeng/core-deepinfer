@@ -2,7 +2,7 @@
 
 [中文](04-budget-scheduling.md) · [Series](00-index_EN.md)
 
-A budget printed in a log is only an allocation example. In [`Engine.step`](../core_deepinfer/engine.py), follow `newer_lengths` into `proposal.tokens[:length - 1]` and then target verification. That slice makes the plan control execution.
+A budget printed in a log is only an allocation example. In [`Engine.step`](../engine.py), follow `newer_lengths` into `proposal.tokens[:length - 1]` and then target verification. That slice makes the plan control execution.
 
 ## Reserve progress first
 

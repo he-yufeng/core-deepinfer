@@ -4,7 +4,7 @@
 
 Final token equality can hide half of speculative correctness: after rejecting an output suffix, did the cache reject it too?
 
-[`Runner`](../core_deepinfer/runtime.py) uses rings in the actual forward path. Each slot contains real local K/V across consumer layers. `advance` writes a new position, and the next forward reads through absolute position tags. With a small window, verifying one proposal can overwrite every old slot.
+[`Runner`](../runtime.py) uses rings in the actual forward path. Each slot contains real local K/V across consumer layers. `advance` writes a new position, and the next forward reads through absolute position tags. With a small window, verifying one proposal can overwrite every old slot.
 
 ## Write first, then choose the commit boundary
 
@@ -30,7 +30,7 @@ A forward failure restores the beginning of the current verification. It becomes
 
 ## Prove that verification is incremental
 
-In [`test_engine.py`](../tests/test_engine.py), `test_target_and_draft_prefill_only_once_not_on_each_verification` counts actual prefill calls. A separate runtime test forbids any further prefill after initialization, then verifies an all-accepted proposal and its bonus.
+In [`test_engine.py`](../../tests/test_engine.py), `test_target_and_draft_prefill_only_once_not_on_each_verification` counts actual prefill calls. A separate runtime test forbids any further prefill after initialization, then verifies an all-accepted proposal and its bonus.
 
 The numerical oracle checks more than emitted tokens: encoder history, projected shared keys and values, and every layer's local K/V must agree. It also checks the first new forward after restoration.
 

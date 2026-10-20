@@ -5,8 +5,8 @@ build-backend = "hatchling.build"
 [project]
 name = "core-deepinfer"
 version = "0.1.0"
-description = "Executable CPU notes on bounded replay, speculative verification and inference state"
-readme = "README.md"
+description = "A readable NumPy inference loop: prefill, cached decoding, speculative rollback and bilingual guides"
+readme = "README_PYPI.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{name = "Yufeng He"}]
@@ -20,14 +20,16 @@ dev = ["pytest>=8", "ruff>=0.9", "build>=1.2"]
 core-deepinfer = "core_deepinfer.cli:main"
 
 [project.urls]
-Repository = "https://github.com/he-yufeng/core-deepinfer"
-Issues = "https://github.com/he-yufeng/core-deepinfer/issues"
+"Source readings" = "https://github.com/he-yufeng/ai-infra-notes"
+"Upstream DeepInfer" = "https://github.com/deepseek-ai/DeepInfer"
 
 [tool.hatch.build.targets.wheel]
 packages = ["core_deepinfer"]
+core-metadata-version = "2.4"
 
 [tool.hatch.build.targets.sdist]
-include = ["/core_deepinfer", "/tests", "/docs", "/article", "/examples", "/assets", "/README.md", "/README_CN.md", "/LICENSE", "/pyproject.toml", "/.github/workflows/tests.yml"]
+core-metadata-version = "2.4"
+include = ["/core_deepinfer", "/tests", "/docs", "/examples", "/assets", "/README.md", "/README_CN.md", "/README_PYPI.md", "/LICENSE", "/pyproject.toml", "/.github/workflows/tests.yml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -11,6 +11,7 @@ from .budget import choose_budget, reallocate
 from .cache import StateCache, StateRing, cache_key
 from .demo import run_demo
 from .engine import Engine, EngineConfig
+from .guide import guide_catalog, read_guide
 from .model import TinyModel
 from .replay import chunk_plan, replay_experiment
 from .speculative import generate, generate_speculative
@@ -160,10 +161,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "experiment",
-        choices=["demo", "generate", "all", "replay", "budget", "cache", "speculative"],
+        choices=["demo", "generate", "guide", "all", "replay", "budget", "cache", "speculative"],
         nargs="?",
         default="demo",
     )
+    parser.add_argument("chapter", nargs="?", choices=[f"{number:02}" for number in range(7)])
+    parser.add_argument("--lang", choices=["en", "zh"], default="en", help="Guide language")
+    parser.add_argument("--list", action="store_true", help="List the bundled guide chapters")
     parser.add_argument("--length", type=int, default=32, help="Replay experiment input length")
     parser.add_argument("--keep", type=int, default=8)
     parser.add_argument("--seed", type=int, default=7)
@@ -180,6 +184,25 @@ def main(argv=None):
     parser.add_argument("--trace", action="store_true", help="Include actual engine execution events")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable results")
     args = parser.parse_args(argv)
+    if args.experiment == "guide":
+        if args.list:
+            result = {"language": args.lang, "guides": guide_catalog(language=args.lang)}
+        else:
+            result = {
+                "chapter": args.chapter or "00",
+                "language": args.lang,
+                "markdown": read_guide(args.chapter or "00", language=args.lang),
+            }
+        if args.json:
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+        elif args.list:
+            for entry in result["guides"]:
+                print(f"{entry['chapter']}  {entry['title']}")
+        else:
+            print(result["markdown"].rstrip())
+        return 0
+    if args.chapter is not None or args.list or args.lang != "en":
+        parser.error("chapter, --list and --lang are only available with guide")
     experiments = {
         "replay": lambda: replay_experiment(length=args.length, keep=args.keep, seed=args.seed),
         "budget": budget_experiment,

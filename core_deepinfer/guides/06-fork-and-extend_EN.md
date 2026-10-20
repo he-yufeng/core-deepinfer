@@ -4,7 +4,7 @@
 
 Following CoreCoder does not mean matching README layout or a line count. A better test is whether changing one decision has an observable consequence through the complete loop, with an independent oracle that can identify the mistake.
 
-Run [`examples/engine_batch.py`](../examples/engine_batch.py). It submits requests through the library, cancels one, steps a round, drains the rest and reuses the same engine. Healthy outputs are checked against ordinary greedy generation. Embedding the engine does not require going through its CLI.
+Run [`examples/engine_batch.py`](../../examples/engine_batch.py). It submits requests through the library, cancels one, steps a round, drains the rest and reuses the same engine. Healthy outputs are checked against ordinary greedy generation. Embedding the engine does not require going through its CLI.
 
 ## Start with scheduling
 
@@ -42,4 +42,4 @@ python -m core_deepinfer generate --input examples/requests.json --trace --json
 python -m pytest -q
 ```
 
-Finally build, install, and run outside the checkout. Importing from the source directory does not prove that the wheel and console entry point work. [Validation](../docs/VALIDATION.md) records those checks separately.
+Finally build, install, and run outside the checkout. Importing from the source directory does not prove that the wheel and console entry point work. [Validation](../../docs/VALIDATION.md) records those checks separately.

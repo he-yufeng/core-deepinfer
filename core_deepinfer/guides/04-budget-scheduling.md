@@ -2,7 +2,7 @@
 
 [English](04-budget-scheduling_EN.md) · [系列目录](00-index.md)
 
-预算如果只出现在日志里，就只是一个算例。打开 [`Engine.step`](../core_deepinfer/engine.py)，看 `newer_lengths` 怎样变成 `proposal.tokens[:length - 1]`，再进入目标模型验证。这一步把预算从一个预测值变成了实际执行宽度。
+预算如果只出现在日志里，就只是一个算例。打开 [`Engine.step`](../engine.py)，看 `newer_lengths` 怎样变成 `proposal.tokens[:length - 1]`，再进入目标模型验证。这一步把预算从一个预测值变成了实际执行宽度。
 
 ## 一份长度先保留什么
 

@@ -2,7 +2,7 @@
 
 [中文](05-model-and-replay.md) · [Series](00-index_EN.md)
 
-[`TinyModel`](../core_deepinfer/model.py) does not reproduce a production architecture. Single-head float64 attention, one causal encoder, layered local consumers and shared source KV are enough to create real dependencies and state. Its random, untrained parameters are not a basis for judging task quality.
+[`TinyModel`](../model.py) does not reproduce a production architecture. Single-head float64 attention, one causal encoder, layered local consumers and shared source KV are enough to create real dependencies and state. Its random, untrained parameters are not a basis for judging task quality.
 
 ## Input and prediction positions are offset
 

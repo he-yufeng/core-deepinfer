@@ -28,3 +28,5 @@ jobs:
           cd "${RUNNER_TEMP}"
           python -I -m core_deepinfer demo --json
           core-deepinfer generate --prompt 1,2,3 --max-tokens 4 --json
+          core-deepinfer guide --list --json
+          core-deepinfer guide 03 --lang zh

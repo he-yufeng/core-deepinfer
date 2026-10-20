@@ -2,9 +2,7 @@
 
 **沿着一个请求，读到最后一个真正提交的 Token。**
 
-[English](README.md) · [源码导读系列](article/00-index.md) · [原版源码映射](docs/SOURCE_MAP.md) · [验证记录](docs/VALIDATION.md)
-
-[![CPU reference checks](https://github.com/he-yufeng/core-deepinfer/actions/workflows/tests.yml/badge.svg)](https://github.com/he-yufeng/core-deepinfer/actions/workflows/tests.yml)
+[English](README.md) · [源码导读系列](core_deepinfer/guides/00-index.md) · [原版源码映射](docs/SOURCE_MAP.md) · [验证记录](docs/VALIDATION.md)
 
 推理框架最难读懂的，往往不是 attention 的公式。一个请求被抢占、命中旧状态、提出草稿又被拒绝以后，哪些数据还有效，下一轮从哪里接着算？
 
@@ -23,11 +21,12 @@ Core DeepInfer 把这条执行链写成了一个小型 NumPy 引擎：请求入�
 Python 3.10+，运行依赖只有 NumPy。不下载权重，不要 API key，也不启动服务。
 
 ```bash
-git clone https://github.com/he-yufeng/core-deepinfer.git
-cd core-deepinfer
-python -m pip install -e '.[dev]'
-python -m core_deepinfer
+python -m pip install core-deepinfer
+core-deepinfer
+core-deepinfer guide --list --lang zh
 ```
+
+安装包自带完整双语导读。`core-deepinfer guide 03 --lang zh` 会直接打印第三篇，不开浏览器，也不临时联网。完整测试、示例和验证记录在源码分发包里，执行下文的仓内命令前，先按[修改源码](#修改源码)准备工作目录。
 
 默认 demo 不是把几个预写好的数字打印出来。它实际提交两个有共同前缀的请求，取消第三个请求，运行草稿与目标模型，再让同一前缀依次经历热命中、短状态过期后的恢复、完整过期后的冷启动。
 
@@ -105,7 +104,7 @@ python -m core_deepinfer generate --input examples/requests.json --greedy --json
 
 ## 从能跑到读懂
 
-[导读总入口](article/00-index.md)按实际代码分六部分，中英文各自成篇：
+[导读总入口](core_deepinfer/guides/00-index.md)按实际代码分六部分，中英文各自成篇：
 
 1. 请求怎样走完一生：入队、调度、提交与终态。
 2. 状态命中以后，到底省了哪一段计算。
@@ -126,6 +125,22 @@ python -m core_deepinfer speculative --json
 ```
 
 默认恢复使用 exact。显式设置 `--recovery compact --keep 8` 才选择有界恢复，它可能改变后续输出。mask 与 compact 对齐，只能说明同一截断图的实现一致，不说明截断图与 exact 等价。完整 Encoder 来源仍然保留，consumer 少算几行也不代表整个模型按比例加速。
+
+## 修改源码
+
+完整测试和示例放在 [PyPI 源码分发包](https://pypi.org/project/core-deepinfer/#files)，不是只给一个能打印 demo 的 wheel：
+
+```bash
+python -m pip download --no-deps --no-binary=:all: core-deepinfer==0.1.0
+tar -xzf core_deepinfer-0.1.0.tar.gz
+cd core_deepinfer-0.1.0
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+python -m pytest -q
+```
+
+`core_deepinfer/guides` 里的文档就是 CLI 离线读取的那一份，没有另维护一套安装包导读。模型中的 Encoder/consumer 分工与运行时的 prefill/decode 是两个维度；这里两种执行阶段都有，不是一个只演示 decode 的算例。
 
 ## 验证与没有实现的部分
 

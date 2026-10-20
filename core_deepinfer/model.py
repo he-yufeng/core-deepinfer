@@ -69,7 +69,14 @@ class TinyModel:
         self.shared = (matrix(), matrix())
         self.layers = [tuple(matrix() for _ in range(8)) for _ in range(depth)]
         self.head = rng.normal(0, 1 / np.sqrt(width), (width, vocab_size))
-        digest = hashlib.sha256(f"{vocab_size}:{width}:{depth}:{window}".encode())
+
+    @property
+    def identity(self):
+        layout = (
+            f"{type(self).__module__}.{type(self).__qualname__}:"
+            f"{self.vocab_size}:{self.width}:{self.depth}:{self.window}"
+        )
+        digest = hashlib.sha256(layout.encode())
         for value in [
             self.embedding,
             *self.encoder,
@@ -77,8 +84,9 @@ class TinyModel:
             *(m for layer in self.layers for m in layer),
             self.head,
         ]:
+            digest.update(f"{value.dtype.str}:{value.shape}".encode())
             digest.update(value.tobytes())
-        self.identity = digest.hexdigest()
+        return digest.hexdigest()
 
     def tokens(self, tokens):
         values = list(tokens)

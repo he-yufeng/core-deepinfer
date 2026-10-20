@@ -189,7 +189,7 @@ class Runner:
                 checkpoints.append(self.checkpoint())
                 if token == eos_id:
                     break
-        except Exception:
+        except BaseException:
             self.rollback(checkpoints[0])
             raise
         return Proposal(tuple(tokens), tuple(confidence), tuple(checkpoints))
@@ -216,7 +216,7 @@ class Runner:
                 self.rollback(checkpoints[accepted])
             for token in decision.tokens[accepted:]:
                 self.advance(token)
-        except Exception:
+        except BaseException:
             self.rollback(checkpoints[0])
             raise
         return Verified(decision.tokens, accepted, len(drafts), discarded)
